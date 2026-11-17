@@ -1,0 +1,8 @@
+{
+  "name": "Kabenevi AI",
+  "short_name": "Kabenevi",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080d19",
+  "theme_color": "#080d19"
+}
