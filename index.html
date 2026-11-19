@@ -4,14 +4,14 @@
 </style></head><body><header><div class="brand"><div class="logo">✦</div><div>KABENEVI AI<div class="tag">YOUR WORLD. YOUR INTELLIGENCE.</div></div></div></header><main class="wrap"><section class="hero"><div class="eyebrow">YOUR PERSONAL AI STUDIO</div><h1>What can I help you create?</h1><p>Ask questions, explore ideas, learn and create in one place.</p></section><section class="layout"><aside class="side"><small>YOUR AI TOOLKIT</small><button class="tool active" data-name="Chat">✧ &nbsp; AI Chat</button><button class="tool" data-name="Image Creator">▧ &nbsp; Image Creator</button><button class="tool" data-name="Video Creator">▶ &nbsp; Video Creator</button><button class="tool" data-name="Study Assistant">▤ &nbsp; Study Assistant</button><button class="tool" data-name="Writing Assistant">✎ &nbsp; Writing Assistant</button><button class="tool" data-name="Voice Assistant">◖ &nbsp; Voice Assistant</button><button class="tool" data-name="Web Search">◎ &nbsp; Web Search</button><button class="tool" data-name="File Assistant">▱ &nbsp; File Assistant</button></aside><section class="chat"><div class="chathead"><b id="mode">Kabenevi Chat</b><span class="status">● Prototype ready</span></div><div class="messages" id="messages"><div class="msg bot">Hello! I'm Kabenevi AI. ✨\n\nWelcome to your AI studio. Choose a tool or type a message to explore the prototype.</div></div><div class="composer"><div class="entry"><input id="prompt" placeholder="Message Kabenevi AI..." autocomplete="off"><button id="send">Send ↗</button></div><div class="hint">Prototype version · Live AI features will be connected in the next development stage.</div></div></section></section><section class="features"><div class="feature">✧<b>AI conversations</b><small>Ask and brainstorm</small></div><div class="feature">▧<b>Image studio</b><small>Imagine new visuals</small></div><div class="feature">▶<b>Video studio</b><small>Plan video ideas</small></div><div class="feature">▤<b>Study space</b><small>Learn step by step</small></div></section><div class="note"><b>Development note:</b> This is a front-end prototype. Real AI answers, image/video generation, accounts and cloud history require secure backend services and AI provider connections. Do not put private API keys in website code.</div><footer>© 2026 Kabenevi AI · Independent project</footer></main><script>
 const box=document.querySelector('#messages'),input=document.querySelector('#prompt');let selected='Chat';function say(t,c){let e=document.createElement('div');e.className='msg '+c;e.textContent=t;box.appendChild(e);box.scrollTop=box.scrollHeight}document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));b.classList.add('active');selected=b.dataset.name;document.querySelector('#mode').textContent='Kabenevi '+selected;say(selected+' selected. This section is ready for its AI service connection.','bot')});function send()
 async function send(){
-  let v=input.value.trim();
+  const v=input.value.trim();
   if(!v)return;
 
   say(v,'user');
   input.value='';
 
   try {
-    const response = await fetch('https://kabenevi-ai.nevillaberyl.workers.dev/chat',{
+    const response=await fetch('https://kabenevi-ai.nevillaberyl.workers.dev/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -19,11 +19,9 @@ async function send(){
       })
     });
 
-    const data = await response.json();
+    const data=await response.json();
 
-    if(!response.ok){
-      throw new Error(data.error || 'Request failed');
-    }
+    if(!response.ok) throw new Error(data.error || 'Request failed');
 
     say(data.reply || 'No reply received.','bot');
 
