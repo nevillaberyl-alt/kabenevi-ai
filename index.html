@@ -1,208 +1,453 @@
-import os
 
-files = {
-    "requirements.txt": """fastapi
-uvicorn
-google-genai
-pydantic
-""",
-    
-    ".gitignore": """.env
-__pycache__/
-venv/
-.DS_Store
-""",
-
-    "main.py": '''import os
-import datetime
-from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from google import genai
-from google.genai import types
-
-# Initialize the official Google GenAI client
-client = genai.Client()
-
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# --- CUSTOM TOOLS ---
-def get_current_time(timezone: str = "UTC") -> str:
-    """Returns the current date and time."""
-    now = datetime.datetime.now(datetime.timezone.utc)
-    return f"Current UTC time is {now.strftime('%Y-%m-%d %H:%M:%S')}"
-
-def calculate_math(expression: str) -> str:
-    """Safely evaluates basic math expressions like '245 * 19'."""
-    allowed = set("0123456789+-*/(). ")
-    if not all(c in allowed for c in expression):
-        return "Invalid characters in expression."
-    try:
-        return str(eval(expression))
-    except Exception as e:
-        return f"Math error: {e}"
-
-class ChatRequest(BaseModel):
-    message: str
-    history: list[dict] = []
-    tier: str = "fast"
-
-@app.get("/", response_class=HTMLResponse)
-async def serve_ui():
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        return f.read()
-
-@app.post("/api/chat")
-async def chat_endpoint(req: ChatRequest):
-    model_id = "gemini-2.5-flash" if req.tier == "fast" else "gemini-2.5-pro"
-
-    contents = []
-    for turn in req.history:
-        contents.append(
-            types.Content(
-                role=turn["role"],
-                parts=[types.Part.from_text(text=turn["text"])]
-            )
-        )
-    contents.append(
-        types.Content(
-            role="user",
-            parts=[types.Part.from_text(text=req.message)]
-        )
-    )
-
-    config = types.GenerateContentConfig(
-        system_instruction=(
-            "You are an advanced, fast, and helpful AI assistant. "
-            "Use Markdown formatting, code blocks, and clear structure."
-        ),
-        tools=[
-            get_current_time,
-            calculate_math,
-            {"google_search": {}}
-        ],
-        temperature=0.7,
-    )
-
-    def generate():
-        response_stream = client.models.generate_content_stream(
-            model=model_id,
-            contents=contents,
-            config=config
-        )
-        for chunk in response_stream:
-            if chunk.text:
-                yield chunk.text
-
-    return StreamingResponse(generate(), media_type="text/plain")
-''',
-
-    "static/index.html": '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NextGen AI</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    :root { --bg: #0f1117; --surface: #1a1d27; --accent: #4f8cff; --text: #e2e8f0; }
-    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; }
-    header { padding: 14px 24px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3243; }
-    select, button { background: #262b3a; color: var(--text); border: 1px solid #3b4259; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-    button.primary { background: var(--accent); color: #fff; border: none; font-weight: 600; }
-    #chat-box { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-width: 860px; width: 100%; margin: 0 auto; box-sizing: border-box; }
-    .msg { padding: 14px 18px; border-radius: 12px; line-height: 1.6; max-width: 85%; }
-    .user { background: var(--accent); color: #fff; align-self: flex-end; }
-    .model { background: var(--surface); align-self: flex-start; border: 1px solid #2d3243; }
-    .model pre { background: #0b0d12; padding: 12px; border-radius: 8px; overflow-x: auto; }
-    footer { padding: 16px 24px; background: var(--surface); border-top: 1px solid #2d3243; }
-    .input-row { display: flex; gap: 10px; max-width: 860px; margin: 0 auto; }
-    input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid #3b4259; background: #0f1117; color: var(--text); font-size: 15px; outline: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBAI — Kabenevi AI</title>
+<style>
+:root {
+  --bg:#090909;
+  --panel:#111;
+  --panel2:#181818;
+  --line:#292929;
+  --text:#f5f5f5;
+  --muted:#929292;
+  --accent:#d9d9d9;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,Arial,sans-serif;height:100vh;overflow:hidden
+}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;height:100vh}
+.sidebar{
+  width:265px;background:#0d0d0d;border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:20px 14px;flex-shrink:0
+}
+.brand{display:flex;align-items:center;gap:12px;padding:5px 8px 24px}
+.logo{
+  width:43px;height:43px;border-radius:13px;
+  background:linear-gradient(145deg,#fff,#777 48%,#222);
+  display:grid;place-items:center;color:#080808;
+  font-size:29px;font-weight:1000;font-style:italic;
+  box-shadow:0 0 22px #ffffff18
+}
+.brand-name{font-size:19px;font-weight:800;letter-spacing:1px}
+.brand-sub{font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:3px}
+.newchat{
+  border:1px solid #3a3a3a;background:#f1f1f1;color:#080808;
+  border-radius:10px;padding:12px;text-align:left;font-weight:700;
+  margin-bottom:22px
+}
+.section-label{
+  color:#777;font-size:10px;letter-spacing:1.7px;
+  padding:0 10px;margin:8px 0
+}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button,.history-item{
+  background:transparent;border:0;color:#aaa;text-align:left;
+  padding:11px 12px;border-radius:9px;font-size:13px
+}
+.nav button:hover,.nav button.active,.history-item:hover{
+  background:#202020;color:white
+}
+.nav button.active{border:1px solid #333}
+.history{overflow:auto;flex:1;min-height:80px}
+.history-item{
+  display:flex;justify-content:space-between;gap:6px;
+  width:100%;white-space:nowrap;overflow:hidden
+}
+.history-item span{overflow:hidden;text-overflow:ellipsis}
+.history-item small{color:#888}
+.sidebar-bottom{border-top:1px solid var(--line);padding-top:14px}
+.status{font-size:11px;color:#aaa;padding:8px}
+.dot{display:inline-block;width:7px;height:7px;background:#8bd3a4;border-radius:50%;margin-right:7px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{
+  height:65px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 25px
+}
+.top-title{font-weight:700;font-size:14px}
+.top-right{font-size:11px;color:#aaa}
+.mobile-brand{display:none}
+.content{flex:1;overflow:auto;display:flex;flex-direction:column}
+.messages{
+  width:min(850px,100%);margin:0 auto;padding:35px 22px;
+  flex:1;display:flex;flex-direction:column;gap:24px
+}
+.welcome{margin:auto;text-align:center;padding:35px 15px}
+.welcome-logo{
+  width:72px;height:72px;border-radius:22px;margin:0 auto 22px;
+  display:grid;place-items:center;font-size:48px;font-weight:1000;
+  font-style:italic;color:#080808;
+  background:linear-gradient(140deg,#fff,#888 55%,#333);
+  box-shadow:0 0 45px #fff1
+}
+.welcome h1{font-size:30px;margin:0 0 10px}
+.welcome p{font-size:13px;color:var(--muted);line-height:1.7}
+.quick{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;max-width:480px;margin:28px auto 0
+}
+.quick button{
+  border:1px solid var(--line);background:#111;color:#ddd;
+  padding:14px;border-radius:12px;text-align:left;font-size:12px
+}
+.quick button:hover{background:#222}
+.message{display:flex;flex-direction:column;max-width:85%;gap:7px}
+.message.user{align-self:flex-end;align-items:flex-end}
+.message.assistant{align-self:flex-start}
+.message-role{font-size:10px;color:#777;letter-spacing:1px}
+.bubble{
+  padding:13px 16px;border-radius:15px;font-size:14px;
+  line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere
+}
+.user .bubble{background:#252525;border:1px solid #333}
+.assistant .bubble{background:transparent}
+.bubble img{max-width:100%;border-radius:10px;margin-top:8px}
+.message-actions{display:flex;gap:8px}
+.message-actions button{
+  background:transparent;border:0;color:#777;font-size:11px;padding:3px
+}
+.message-actions button:hover{color:white}
+.composer-area{
+  padding:15px 20px 20px;background:linear-gradient(transparent,#090909 25%)
+}
+.composer{max-width:850px;margin:auto}
+.attachments{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.attachments button,.attach-label{
+  border:1px solid #333;background:#141414;color:#bbb;
+  border-radius:20px;padding:7px 11px;font-size:11px
+}
+.inputbox{
+  border:1px solid #3b3b3b;background:#151515;border-radius:17px;
+  display:flex;align-items:flex-end;padding:10px;gap:8px
+}
+.inputbox textarea{
+  flex:1;background:transparent;border:0;outline:0;color:white;
+  resize:none;min-height:40px;max-height:150px;padding:10px;
+  font-size:14px
+}
+.send{
+  border:0;border-radius:11px;background:#f2f2f2;color:#080808;
+  width:40px;height:40px;font-size:19px;font-weight:bold
+}
+.send:disabled{opacity:.4;cursor:not-allowed}
+.hint{text-align:center;color:#666;font-size:10px;margin-top:9px}
+#fileInput,#imageInput{display:none}
+.typing{color:#888;font-size:12px;padding:8px}
+.preview{max-width:100px;max-height:75px;border-radius:8px}
+@media(max-width:700px){
+ .sidebar{width:72px;padding:15px 8px}
+ .brand{padding:4px 5px 22px}
+ .logo{width:46px;height:46px}
+ .brand-name,.brand-sub,.newchat span,.section-label,
+ .nav button .nav-text,.history,.sidebar-bottom .status{display:none}
+ .newchat{text-align:center;padding:12px 5px;font-size:20px}
+ .nav button{text-align:center;padding:13px 4px;font-size:17px}
+ .sidebar-bottom{display:none}
+ .topbar{padding:0 14px}
+ .mobile-brand{display:block;font-size:13px;font-weight:800}
+ .messages{padding:22px 13px}
+ .message{max-width:94%}
+ .welcome h1{font-size:24px}
+ .composer-area{padding:10px}
+}
+</style>
 </head>
 <body>
-  <header>
-    <strong>⚡ NextGen AI</strong>
-    <div>
-      <label for="tier">Plan: </label>
-      <select id="tier">
-        <option value="fast">Free (Fast Flash)</option>
-        <option value="pro">✨ Pro Upgrade (Deep Reasoning)</option>
-      </select>
-    </div>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">K</div>
+    <div><div class="brand-name">KBAI</div><div class="brand-sub">KABENEVI AI</div></div>
+  </div>
+  <button class="newchat" onclick="newChat()">＋ <span>New chat</span></button>
+  <div class="section-label">WORKSPACE</div>
+  <nav class="nav" id="nav">
+    <button class="active" data-mode="AI Chat" onclick="setMode('AI Chat')">◈ <span class="nav-text">AI Chat</span></button>
+    <button data-mode="Study" onclick="setMode('Study')">▤ <span class="nav-text">Study</span></button>
+    <button data-mode="Writing" onclick="setMode('Writing')">✎ <span class="nav-text">Writing</span></button>
+    <button data-mode="Image Creator" onclick="setMode('Image Creator')">▧ <span class="nav-text">Image Creator</span></button>
+    <button data-mode="File Assistant" onclick="setMode('File Assistant')">▱ <span class="nav-text">File Assistant</span></button>
+  </nav>
+  <div class="section-label" style="margin-top:25px">RECENT CHATS</div>
+  <div class="history" id="history"></div>
+  <div class="sidebar-bottom">
+    <div class="status"><span class="dot"></span>KBAI workspace</div>
+    <div class="status">Kabenevi AI · Version 2</div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="mobile-brand">KBAI — KABENEVI AI</div>
+    <div class="top-title" id="modeTitle">AI Chat</div>
+    <div class="top-right"><span class="dot"></span>Ready</div>
   </header>
-
-  <div id="chat-box"></div>
-
-  <footer>
-    <div class="input-row">
-      <input id="prompt" type="text" placeholder="Ask anything, search the web, or solve complex code..." autocomplete="off" />
-      <button class="primary" onclick="sendMessage()">Send</button>
+  <div class="content">
+    <div class="messages" id="messages"></div>
+  </div>
+  <div class="composer-area">
+    <div class="composer">
+      <div class="attachments">
+        <label class="attach-label" for="imageInput">＋ Image</label>
+        <label class="attach-label" for="fileInput">＋ TXT file</label>
+        <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+        <input id="fileInput" type="file" accept=".txt,text/plain">
+        <span id="fileName" style="font-size:11px;color:#888"></span>
+      </div>
+      <div class="inputbox">
+        <textarea id="prompt" rows="1" placeholder="Message KBAI..."></textarea>
+        <button class="send" id="sendBtn" onclick="sendMessage()">↑</button>
+      </div>
+      <div class="hint">KBAI can make mistakes. Check important information.</div>
     </div>
-  </footer>
+  </div>
+</main>
+</div>
 
-  <script>
-    const chatBox = document.getElementById("chat-box");
-    const promptInput = document.getElementById("prompt");
-    let history = [];
+<script>
+const API = "https://kabenevi-ai.nevillaberyl.workers.dev";
+const STORAGE = "kbai_chats_v2";
+let mode = "AI Chat";
+let chats = JSON.parse(localStorage.getItem(STORAGE) || "{}");
+let currentId = null;
+let selectedImage = null;
+let selectedFile = null;
+let busy = false;
 
-    promptInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") sendMessage();
-    });
+const $ = id => document.getElementById(id);
 
-    async function sendMessage() {
-      const text = promptInput.value.trim();
-      if (!text) return;
-      promptInput.value = "";
+function save(){
+  localStorage.setItem(STORAGE,JSON.stringify(chats));
+  renderHistory();
+}
+function currentMessages(){
+  if(!currentId || !chats[mode]?.[currentId]) return [];
+  return chats[mode][currentId].messages;
+}
+function ensureChat(){
+  if(!chats[mode]) chats[mode] = {};
+  if(!currentId || !chats[mode][currentId]){
+    currentId = Date.now().toString();
+    chats[mode][currentId] = {
+      title:"New chat",messages:[]
+    };
+  }
+}
+function newChat(){
+  currentId = null;
+  selectedImage = null;
+  selectedFile = null;
+  $("fileName").textContent = "";
+  render();
+}
+function setMode(next){
+  mode = next;
+  currentId = null;
+  document.querySelectorAll(".nav button").forEach(b=>{
+    b.classList.toggle("active",b.dataset.mode===mode);
+  });
+  $("modeTitle").textContent = mode;
+  render();
+}
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+function renderHistory(){
+  const list = chats[mode] || {};
+  $("history").innerHTML = Object.entries(list).reverse().map(([id,c])=>
+    `<button class="history-item" onclick="openChat('${id}')">
+      <span>${escapeHTML(c.title)}</span><small>›</small>
+    </button>`
+  ).join("");
+}
+function openChat(id){
+  currentId = id;
+  render();
+}
+function render(){
+  renderHistory();
+  const msgs = currentMessages();
+  if(!msgs.length){
+    $("messages").innerHTML = `
+      <div class="welcome">
+        <div class="welcome-logo">K</div>
+        <h1>How can I help you?</h1>
+        <p>Welcome to Kabenevi AI.<br>Your intelligent workspace for ideas, learning and creativity.</p>
+        <div class="quick">
+          <button onclick="quick('Explain a difficult topic simply')">▤ &nbsp; Help me study</button>
+          <button onclick="quick('Help me improve my writing')">✎ &nbsp; Improve my writing</button>
+          <button onclick="setMode('Image Creator')">▧ &nbsp; Create an image</button>
+          <button onclick="setMode('File Assistant')">▱ &nbsp; Read a TXT file</button>
+        </div>
+      </div>`;
+    return;
+  }
+  $("messages").innerHTML = msgs.map((m,i)=>`
+    <div class="message ${m.role}">
+      <div class="message-role">${m.role==="user"?"YOU":"KBAI"}</div>
+      <div class="bubble">${escapeHTML(m.content).replace(/\n/g,"<br>")}
+        ${m.image?`<br><img src="${m.image}" alt="Uploaded image">`:""}
+      </div>
+      ${m.role==="assistant"?`<div class="message-actions">
+        <button onclick="copyMessage(${i})">Copy</button>
+      </div>`:""}
+    </div>`).join("");
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+function addMessage(role,content,image=null){
+  ensureChat();
+  const list = currentMessages();
+  list.push({role,content,image});
+  if(list.length===1){
+    chats[mode][currentId].title=content.slice(0,35) || mode;
+  }
+  save();
+  render();
+}
+function quick(text){
+  $("prompt").value=text;
+  sendMessage();
+}
+function copyMessage(i){
+  navigator.clipboard.writeText(currentMessages()[i].content);
+}
+$("prompt").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();sendMessage();
+  }
+});
+$("prompt").addEventListener("input",e=>{
+  e.target.style.height="auto";
+  e.target.style.height=Math.min(e.target.scrollHeight,150)+"px";
+});
+$("imageInput").addEventListener("change",e=>{
+  selectedImage=e.target.files[0]||null;
+  $("fileName").textContent=selectedImage?selectedImage.name:"";
+});
+$("fileInput").addEventListener("change",e=>{
+  selectedFile=e.target.files[0]||null;
+  $("fileName").textContent=selectedFile?selectedFile.name:"";
+});
 
-      appendMessage("user", text);
-      const aiDiv = appendMessage("model", "Thinking...");
-      const tier = document.getElementById("tier").value;
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result.split(",")[1]);
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function request(path,data){
+  const response=await fetch(API+path,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+  const result=await response.json();
+  if(!response.ok) throw new Error(result.error||"Request failed.");
+  return result;
+}
+async function sendMessage(){
+  if(busy)return;
+  const text=$("prompt").value.trim();
+  if(!text&&!selectedImage&&!selectedFile)return;
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history, tier })
+  busy=true;
+  $("sendBtn").disabled=true;
+  const image=selectedImage;
+  const file=selectedFile;
+  $("prompt").value="";
+  selectedImage=null;
+  selectedFile=null;
+  $("fileName").textContent="";
+
+  const preview=image?URL.createObjectURL(image):null;
+  addMessage("user",text|| (image?"Please describe this image.":"Please read this file."),preview);
+
+  const typing=document.createElement("div");
+  typing.className="typing";
+  typing.textContent="KBAI is thinking...";
+  $("messages").appendChild(typing);
+
+  try{
+    let result;
+
+    if(mode==="Image Creator"){
+      if(!text)throw new Error("Describe the image you want to create.");
+      result=await request("/image",{prompt:text});
+      typing.remove();
+      addMessage("assistant","Here is your generated image:");
+      const last=$("messages").lastElementChild;
+      const img=document.createElement("img");
+      img.src=result.image;
+      img.alt="Generated image";
+      img.style.maxWidth="100%";
+      img.style.borderRadius="12px";
+      last.querySelector(".bubble").appendChild(img);
+    }
+    else if(image){
+      const base64=await fileToBase64(image);
+      result=await request("/vision",{
+        prompt:text||"Describe this image.",
+        image:base64,
+        mimeType:image.type
       });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullReply = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        fullReply += decoder.decode(value, { stream: true });
-        aiDiv.innerHTML = marked.parse(fullReply);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
-
-      history.push({ role: "user", text });
-      history.push({ role: "model", text: fullReply });
+      typing.remove();
+      addMessage("assistant",result.reply);
     }
-
-    function appendMessage(role, text) {
-      const div = document.createElement("div");
-      div.className = `msg ${role}`;
-      div.innerHTML = role === "user" ? text : marked.parse(text);
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return div;
+    else if(file){
+      if(!file.name.toLowerCase().endsWith(".txt"))
+        throw new Error("This version supports TXT files only.");
+      if(file.size>200000)
+        throw new Error("Please use a TXT file smaller than 200 KB.");
+      const base64=await fileToBase64(file);
+      result=await request("/document",{
+        fileName:file.name,
+        mimeType:"text/plain",
+        content:base64,
+        question:text||"Summarise this document."
+      });
+      typing.remove();
+      addMessage("assistant",result.reply);
     }
-  </script>
+    else{
+      const systemHints={
+        "AI Chat":"",
+        "Study":"You are in Study mode. Teach clearly, use simple explanations and examples.",
+        "Writing":"You are in Writing mode. Help improve writing, grammar, clarity and structure."
+      };
+      const history=currentMessages().map(m=>({
+        role:m.role,
+        content:m.content
+      }));
+      const messages=[
+        ...history.slice(0,-1),
+        {role:"user",content:(systemHints[mode]||"")+"\n\n"+text}
+      ];
+      result=await request("/chat",{messages});
+      typing.remove();
+      addMessage("assistant",result.reply);
+    }
+  }catch(error){
+    typing.remove();
+    addMessage("assistant","Sorry, I couldn't complete that request.\n\n"+error.message);
+  }finally{
+    if(preview)URL.revokeObjectURL(preview);
+    busy=false;
+    $("sendBtn").disabled=false;
+    $("prompt").focus();
+  }
+}
+render();
+</script>
 </body>
 </html>
-'''
-}
-
-for filepath, content in files.items():
-    directory = os.path.dirname(filepath)
-    if directory and not os.path.exists(directory):
-        os.makedirs(directory)
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(content)
-    print(f"Created: {filepath}")
-
-print("\\n✨ All project files generated successfully! You can now delete setup.py and push to GitHub.")
