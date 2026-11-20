@@ -1,806 +1,208 @@
+import os
 
-<!DOCTYPE html>
+files = {
+    "requirements.txt": """fastapi
+uvicorn
+google-genai
+pydantic
+""",
+    
+    ".gitignore": """.env
+__pycache__/
+venv/
+.DS_Store
+""",
+
+    "main.py": '''import os
+import datetime
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from google import genai
+from google.genai import types
+
+# Initialize the official Google GenAI client
+client = genai.Client()
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# --- CUSTOM TOOLS ---
+def get_current_time(timezone: str = "UTC") -> str:
+    """Returns the current date and time."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    return f"Current UTC time is {now.strftime('%Y-%m-%d %H:%M:%S')}"
+
+def calculate_math(expression: str) -> str:
+    """Safely evaluates basic math expressions like '245 * 19'."""
+    allowed = set("0123456789+-*/(). ")
+    if not all(c in allowed for c in expression):
+        return "Invalid characters in expression."
+    try:
+        return str(eval(expression))
+    except Exception as e:
+        return f"Math error: {e}"
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list[dict] = []
+    tier: str = "fast"
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_ui():
+    with open("static/index.html", "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.post("/api/chat")
+async def chat_endpoint(req: ChatRequest):
+    model_id = "gemini-2.5-flash" if req.tier == "fast" else "gemini-2.5-pro"
+
+    contents = []
+    for turn in req.history:
+        contents.append(
+            types.Content(
+                role=turn["role"],
+                parts=[types.Part.from_text(text=turn["text"])]
+            )
+        )
+    contents.append(
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=req.message)]
+        )
+    )
+
+    config = types.GenerateContentConfig(
+        system_instruction=(
+            "You are an advanced, fast, and helpful AI assistant. "
+            "Use Markdown formatting, code blocks, and clear structure."
+        ),
+        tools=[
+            get_current_time,
+            calculate_math,
+            {"google_search": {}}
+        ],
+        temperature=0.7,
+    )
+
+    def generate():
+        response_stream = client.models.generate_content_stream(
+            model=model_id,
+            contents=contents,
+            config=config
+        )
+        for chunk in response_stream:
+            if chunk.text:
+                yield chunk.text
+
+    return StreamingResponse(generate(), media_type="text/plain")
+''',
+
+    "static/index.html": '''<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#090909">
-<title>KBAI — Kabenevi AI</title>
-
-<style>
-:root {
-  --bg:#090909;
-  --panel:#111111;
-  --panel2:#191919;
-  --border:#292929;
-  --text:#f5f5f5;
-  --muted:#999;
-  --accent:#fff;
-}
-* {box-sizing:border-box}
-body {
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Inter,Arial,sans-serif;
-  height:100vh;
-  overflow:hidden;
-}
-button,input,textarea {font:inherit}
-button {cursor:pointer}
-.app {display:flex;height:100vh;width:100%}
-
-/* SIDEBAR */
-.sidebar {
-  width:260px;
-  background:#0d0d0d;
-  border-right:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-  padding:18px 13px;
-  flex-shrink:0;
-}
-.brand {
-  display:flex;
-  align-items:center;
-  gap:11px;
-  padding:5px 8px 23px;
-}
-.logo {
-  width:38px;height:38px;
-  display:grid;place-items:center;
-  border:1px solid #555;
-  border-radius:12px;
-  font-size:25px;font-weight:900;
-  background:linear-gradient(145deg,#fff,#777);
-  color:#080808;
-  box-shadow:0 0 18px #ffffff15;
-}
-.brand-name {font-size:18px;font-weight:750;letter-spacing:.4px}
-.brand-small {font-size:10px;color:#888;margin-top:3px;letter-spacing:2px}
-.new-chat,.nav-item,.upgrade {
-  width:100%;
-  border:1px solid transparent;
-  background:transparent;
-  color:#ddd;
-  border-radius:10px;
-  padding:11px 12px;
-  text-align:left;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:5px;
-}
-.new-chat {border:1px solid #333;background:#171717;margin-bottom:20px}
-.nav-item:hover,.new-chat:hover {background:#202020}
-.nav-item.active {background:#242424;color:white}
-.nav-icon {width:20px;text-align:center;font-size:17px}
-.side-label {
-  color:#777;font-size:11px;
-  text-transform:uppercase;letter-spacing:1.3px;
-  padding:17px 10px 9px;
-}
-.history {overflow-y:auto;flex:1}
-.history-item {
-  padding:9px 10px;
-  border-radius:8px;
-  color:#aaa;
-  font-size:13px;
-  cursor:pointer;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.history-item:hover,.history-item.selected {background:#202020;color:white}
-.side-bottom {border-top:1px solid var(--border);padding-top:12px}
-.upgrade {background:#202020;border:1px solid #3a3a3a;justify-content:center;color:white}
-.profile {display:flex;align-items:center;gap:10px;padding:12px 5px 0}
-.avatar {width:31px;height:31px;border-radius:50%;background:#eee;color:#111;display:grid;place-items:center;font-weight:bold}
-.profile-name {font-size:13px}
-.profile-sub {font-size:11px;color:#888;margin-top:3px}
-
-/* MAIN */
-.main {flex:1;min-width:0;display:flex;flex-direction:column}
-.topbar {
-  height:61px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 22px;
-}
-.top-left {display:flex;align-items:center;gap:12px}
-.menu-btn {display:none}
-.category-title {font-weight:650;font-size:15px}
-.status {font-size:11px;color:#aaa;display:flex;align-items:center;gap:6px}
-.dot {width:7px;height:7px;border-radius:50%;background:#ddd}
-.top-actions {display:flex;gap:8px}
-.small-btn {
-  background:#171717;border:1px solid #333;color:#ddd;
-  padding:8px 11px;border-radius:8px;font-size:12px;
-}
-.small-btn:hover {background:#292929}
-.content {flex:1;overflow-y:auto;display:flex;flex-direction:column}
-.welcome {
-  margin:auto;
-  text-align:center;
-  max-width:650px;
-  padding:35px 20px;
-}
-.welcome-logo {
-  width:66px;height:66px;margin:0 auto 20px;
-  display:grid;place-items:center;border-radius:20px;
-  background:linear-gradient(145deg,#fff,#888);
-  color:#080808;font-size:43px;font-weight:900;
-}
-.welcome h1 {font-size:30px;margin:0 0 10px}
-.welcome p {color:#999;font-size:14px;line-height:1.7}
-.suggestions {
-  display:grid;grid-template-columns:repeat(2,1fr);
-  gap:10px;margin-top:28px;text-align:left;
-}
-.suggestion {
-  border:1px solid #303030;background:#141414;
-  color:#ddd;padding:15px;border-radius:12px;
-  text-align:left;line-height:1.5;font-size:13px;
-}
-.suggestion:hover {background:#222}
-.messages {
-  width:100%;max-width:850px;margin:0 auto;
-  padding:25px 22px 35px;
-}
-.message-row {display:flex;margin:16px 0;gap:10px}
-.message-row.user {justify-content:flex-end}
-.message-row.assistant {justify-content:flex-start}
-.message-avatar {
-  width:29px;height:29px;flex-shrink:0;
-  display:grid;place-items:center;
-  border-radius:9px;background:#eee;color:#111;font-weight:900;
-  font-size:14px;
-}
-.message-row.user .message-avatar {display:none}
-.bubble {
-  max-width:min(78%,680px);
-  padding:12px 15px;border-radius:16px;
-  font-size:14px;line-height:1.7;
-  white-space:pre-wrap;overflow-wrap:anywhere;
-}
-.user .bubble {background:#292929;border:1px solid #393939;border-bottom-right-radius:5px}
-.assistant .bubble {background:transparent;border:1px solid #292929;border-bottom-left-radius:5px}
-.bubble img {max-width:100%;border-radius:10px;display:block;margin-top:10px}
-.message-actions {font-size:11px;color:#777;margin-top:7px}
-.message-actions button {background:none;border:0;color:#888;margin-right:10px;padding:3px}
-.message-actions button:hover {color:white}
-.typing {color:#aaa;font-size:13px;padding:12px}
-
-/* COMPOSER */
-.composer-area {padding:10px 20px 17px}
-.composer {max-width:850px;margin:auto}
-.input-box {
-  background:#171717;border:1px solid #383838;
-  border-radius:17px;padding:12px 13px;
-  box-shadow:0 5px 25px #0008;
-}
-#prompt {
-  width:100%;resize:none;min-height:27px;max-height:170px;
-  border:0;outline:0;background:transparent;color:white;
-  font-size:14px;line-height:1.6;
-}
-.composer-bottom {display:flex;align-items:center;justify-content:space-between;margin-top:9px}
-.tools {display:flex;gap:7px;align-items:center}
-.tool-btn {
-  background:transparent;border:0;color:#aaa;
-  padding:7px 9px;border-radius:8px;font-size:12px;
-}
-.tool-btn:hover {background:#292929;color:white}
-.send-btn {
-  background:#fff;color:#111;border:0;
-  width:34px;height:34px;border-radius:11px;
-  font-size:18px;font-weight:bold;
-}
-.send-btn:disabled {opacity:.4;cursor:not-allowed}
-.disclaimer {text-align:center;color:#666;font-size:10px;margin-top:10px}
-#fileInput {display:none}
-#imageInput {display:none}
-.attachment {font-size:12px;color:#aaa;padding:5px 2px}
-
-/* PAGES */
-.page {max-width:850px;width:100%;margin:0 auto;padding:35px 24px}
-.page h1 {font-size:27px}
-.page p {color:#999;line-height:1.7}
-.plan-grid {display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:25px}
-.plan {border:1px solid #333;background:#151515;border-radius:15px;padding:22px}
-.plan h2 {font-size:19px}
-.plan .price {font-size:27px;font-weight:bold;margin:17px 0}
-.plan li {color:#aaa;font-size:13px;line-height:2.2}
-.plan button {width:100%;padding:12px;border-radius:9px;border:1px solid #555;background:#eee;color:#111;margin-top:15px;font-weight:bold}
-.plan.premium {border-color:#aaa}
-.notice {font-size:12px;color:#888;margin-top:15px}
-.empty {color:#777;font-size:13px;padding:10px}
-
-/* MOBILE */
-@media(max-width:700px) {
-  .sidebar {
-    position:fixed;z-index:10;left:-270px;top:0;bottom:0;
-    transition:left .2s;
-  }
-  .sidebar.open {left:0}
-  .menu-btn {display:block}
-  .topbar {padding:0 13px}
-  .suggestions {grid-template-columns:1fr}
-  .welcome h1 {font-size:25px}
-  .messages {padding:18px 12px}
-  .bubble {max-width:88%}
-  .composer-area {padding:8px 10px 12px}
-  .plan-grid {grid-template-columns:1fr}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NextGen AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root { --bg: #0f1117; --surface: #1a1d27; --accent: #4f8cff; --text: #e2e8f0; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; }
+    header { padding: 14px 24px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3243; }
+    select, button { background: #262b3a; color: var(--text); border: 1px solid #3b4259; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    button.primary { background: var(--accent); color: #fff; border: none; font-weight: 600; }
+    #chat-box { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-width: 860px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+    .msg { padding: 14px 18px; border-radius: 12px; line-height: 1.6; max-width: 85%; }
+    .user { background: var(--accent); color: #fff; align-self: flex-end; }
+    .model { background: var(--surface); align-self: flex-start; border: 1px solid #2d3243; }
+    .model pre { background: #0b0d12; padding: 12px; border-radius: 8px; overflow-x: auto; }
+    footer { padding: 16px 24px; background: var(--surface); border-top: 1px solid #2d3243; }
+    .input-row { display: flex; gap: 10px; max-width: 860px; margin: 0 auto; }
+    input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid #3b4259; background: #0f1117; color: var(--text); font-size: 15px; outline: none; }
+  </style>
 </head>
-
 <body>
-<div class="app">
-
-<aside class="sidebar" id="sidebar">
-  <div class="brand">
-    <div class="logo">K</div>
+  <header>
+    <strong>⚡ NextGen AI</strong>
     <div>
-      <div class="brand-name">KBAI</div>
-      <div class="brand-small">KABENEVI AI</div>
-    </div>
-  </div>
-
-  <button class="new-chat" onclick="newChat()">＋ New chat</button>
-
-  <div class="side-label">Workspace</div>
-  <button class="nav-item active" data-category="Chat" onclick="switchCategory('Chat')"><span class="nav-icon">◉</span> AI Chat</button>
-  <button class="nav-item" data-category="Study" onclick="switchCategory('Study')"><span class="nav-icon">▤</span> Study</button>
-  <button class="nav-item" data-category="Writing" onclick="switchCategory('Writing')"><span class="nav-icon">✎</span> Writing</button>
-  <button class="nav-item" data-category="Image Creator" onclick="switchCategory('Image Creator')"><span class="nav-icon">▧</span> Image Creator</button>
-  <button class="nav-item" data-category="File Assistant" onclick="switchCategory('File Assistant')"><span class="nav-icon">▱</span> File Assistant</button>
-
-  <div class="side-label">Your conversations</div>
-  <div class="history" id="history"></div>
-
-  <div class="side-bottom">
-    <button class="upgrade" onclick="showPremium()">✦ Upgrade to Premium</button>
-    <div class="profile">
-      <div class="avatar">K</div>
-      <div>
-        <div class="profile-name">Kabenevi AI</div>
-        <div class="profile-sub">Free plan</div>
-      </div>
-    </div>
-  </div>
-</aside>
-
-<main class="main">
-  <header class="topbar">
-    <div class="top-left">
-      <button class="small-btn menu-btn" onclick="toggleSidebar()">☰</button>
-      <div class="category-title" id="categoryTitle">AI Chat</div>
-      <div class="status"><span class="dot"></span> Ready</div>
-    </div>
-    <div class="top-actions">
-      <button class="small-btn" onclick="renameChat()">Rename</button>
-      <button class="small-btn" onclick="deleteChat()">Delete</button>
+      <label for="tier">Plan: </label>
+      <select id="tier">
+        <option value="fast">Free (Fast Flash)</option>
+        <option value="pro">✨ Pro Upgrade (Deep Reasoning)</option>
+      </select>
     </div>
   </header>
 
-  <section class="content" id="content">
-    <div class="welcome" id="welcome">
-      <div class="welcome-logo">K</div>
-      <h1>How can I help you today?</h1>
-      <p>Welcome to Kabenevi AI. Ask questions, learn something new, write, or create images.</p>
-      <div class="suggestions">
-        <button class="suggestion" onclick="suggest('Explain a difficult topic in simple English.')">▤ <b>Learn something</b><br>Explain a topic simply</button>
-        <button class="suggestion" onclick="suggest('Help me write something clear and professional.')">✎ <b>Write something</b><br>Create or improve writing</button>
-        <button class="suggestion" onclick="suggest('Help me solve this problem step by step.')">◉ <b>Ask a question</b><br>Get a helpful explanation</button>
-        <button class="suggestion" onclick="switchCategory('Image Creator')">▧ <b>Create an image</b><br>Turn an idea into an image</button>
-      </div>
+  <div id="chat-box"></div>
+
+  <footer>
+    <div class="input-row">
+      <input id="prompt" type="text" placeholder="Ask anything, search the web, or solve complex code..." autocomplete="off" />
+      <button class="primary" onclick="sendMessage()">Send</button>
     </div>
-    <div class="messages" id="messages" style="display:none"></div>
-    <div id="pageArea" style="display:none"></div>
-  </section>
+  </footer>
 
-  <div class="composer-area" id="composerArea">
-    <div class="composer">
-      <div class="attachment" id="attachment"></div>
-      <div class="input-box">
-        <textarea id="prompt" rows="1" placeholder="Message KBAI..."></textarea>
-        <div class="composer-bottom">
-          <div class="tools">
-            <button class="tool-btn" onclick="document.getElementById('fileInput').click()">＋ Attach TXT</button>
-            <button class="tool-btn" onclick="document.getElementById('imageInput').click()">▧ Image</button>
-          </div>
-          <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
-        </div>
-      </div>
-      <div class="disclaimer">KBAI can make mistakes. Check important information.</div>
-    </div>
-  </div>
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const promptInput = document.getElementById("prompt");
+    let history = [];
 
-</main>
-</div>
+    promptInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
 
-<input type="file" id="fileInput" accept=".txt,text/plain">
-<input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp">
+    async function sendMessage() {
+      const text = promptInput.value.trim();
+      if (!text) return;
+      promptInput.value = "";
 
-<script>
-const API = "https://kabenevi-ai.nevillaberyl.workers.dev";
+      appendMessage("user", text);
+      const aiDiv = appendMessage("model", "Thinking...");
+      const tier = document.getElementById("tier").value;
 
-const categories = ["Chat","Study","Writing","Image Creator","File Assistant"];
-let currentCategory = "Chat";
-let currentChatId = null;
-let chats = {};
-let attachedText = null;
-let attachedImage = null;
-let busy = false;
-
-function loadChats() {
-  try {
-    chats = JSON.parse(localStorage.getItem("kbai_chats") || "{}");
-  } catch {
-    chats = {};
-  }
-  categories.forEach(category => {
-    if (!Array.isArray(chats[category])) chats[category] = [];
-  });
-}
-
-function saveChats() {
-  try {
-    localStorage.setItem("kbai_chats", JSON.stringify(chats));
-  } catch {
-    alert("Your browser storage is full. Try deleting older conversations.");
-  }
-}
-
-function makeId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
-}
-
-function getCurrentChat() {
-  return chats[currentCategory].find(c => c.id === currentChatId);
-}
-
-function createChat() {
-  const chat = {
-    id: makeId(),
-    title: "New chat",
-    messages: [],
-    updated: Date.now()
-  };
-  chats[currentCategory].unshift(chat);
-  currentChatId = chat.id;
-  saveChats();
-  render();
-  renderHistory();
-  return chat;
-}
-
-function newChat() {
-  currentChatId = null;
-  attachedText = null;
-  attachedImage = null;
-  document.getElementById("attachment").textContent = "";
-  render();
-  renderHistory();
-  closeSidebar();
-}
-
-function switchCategory(category) {
-  currentCategory = category;
-  currentChatId = null;
-  document.getElementById("categoryTitle").textContent = category;
-  document.querySelectorAll(".nav-item").forEach(button => {
-    button.classList.toggle("active", button.dataset.category === category);
-  });
-  document.getElementById("prompt").placeholder =
-    category === "Image Creator" ? "Describe the image you want to create..." :
-    category === "File Assistant" ? "Ask a question about your TXT document..." :
-    category === "Study" ? "What would you like to learn?" :
-    category === "Writing" ? "What would you like to write?" :
-    "Message KBAI...";
-  render();
-  renderHistory();
-  closeSidebar();
-}
-
-function renderHistory() {
-  const history = document.getElementById("history");
-  history.innerHTML = "";
-  const list = chats[currentCategory] || [];
-
-  if (!list.length) {
-    history.innerHTML = '<div class="empty">No saved chats yet</div>';
-    return;
-  }
-
-  list.forEach(chat => {
-    const item = document.createElement("div");
-    item.className = "history-item" + (chat.id === currentChatId ? " selected" : "");
-    item.textContent = chat.title || "New chat";
-    item.title = item.textContent;
-    item.onclick = () => {
-      currentChatId = chat.id;
-      render();
-      renderHistory();
-      closeSidebar();
-    };
-    history.appendChild(item);
-  });
-}
-
-function render() {
-  const chat = getCurrentChat();
-  const welcome = document.getElementById("welcome");
-  const messages = document.getElementById("messages");
-  const pageArea = document.getElementById("pageArea");
-  const composer = document.getElementById("composerArea");
-
-  pageArea.style.display = "none";
-  messages.style.display = "none";
-  welcome.style.display = "none";
-  composer.style.display = "block";
-
-  if (currentCategory === "Premium") {
-    composer.style.display = "none";
-    pageArea.style.display = "block";
-    pageArea.innerHTML = premiumHTML();
-    return;
-  }
-
-  if (!chat || chat.messages.length === 0) {
-    welcome.style.display = "block";
-    return;
-  }
-
-  messages.style.display = "block";
-  messages.innerHTML = "";
-
-  chat.messages.forEach((message,index) => {
-    const row = document.createElement("div");
-    row.className = "message-row " + message.role;
-
-    if (message.role === "assistant") {
-      const avatar = document.createElement("div");
-      avatar.className = "message-avatar";
-      avatar.textContent = "K";
-      row.appendChild(avatar);
-    }
-
-    const wrap = document.createElement("div");
-    wrap.style.maxWidth = "100%";
-
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = message.content || "";
-
-    if (message.image) {
-      const img = document.createElement("img");
-      img.src = message.image;
-      img.alt = "Generated image";
-      bubble.appendChild(document.createElement("br"));
-      bubble.appendChild(img);
-    }
-
-    wrap.appendChild(bubble);
-
-    if (message.role === "assistant") {
-      const actions = document.createElement("div");
-      actions.className = "message-actions";
-
-      const copy = document.createElement("button");
-      copy.textContent = "Copy";
-      copy.onclick = () => navigator.clipboard?.writeText(message.content || "");
-
-      actions.appendChild(copy);
-      wrap.appendChild(actions);
-    }
-
-    row.appendChild(wrap);
-    messages.appendChild(row);
-  });
-
-  messages.scrollTop = messages.scrollHeight;
-}
-
-function addMessage(role,content,image) {
-  let chat = getCurrentChat();
-  if (!chat) chat = createChat();
-
-  const message = {role,content:content || ""};
-  if (image) message.image = image;
-
-  chat.messages.push(message);
-  chat.updated = Date.now();
-
-  if (chat.title === "New chat" && role === "user") {
-    chat.title = (content || "Image request").slice(0,38);
-  }
-
-  saveChats();
-  render();
-  renderHistory();
-}
-
-function addTyping() {
-  const messages = document.getElementById("messages");
-  messages.style.display = "block";
-  document.getElementById("welcome").style.display = "none";
-
-  const row = document.createElement("div");
-  row.className = "message-row assistant";
-  row.id = "typingRow";
-
-  const avatar = document.createElement("div");
-  avatar.className = "message-avatar";
-  avatar.textContent = "K";
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble typing";
-  bubble.textContent = "KBAI is thinking...";
-
-  row.append(avatar,bubble);
-  messages.appendChild(row);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-function removeTyping() {
-  document.getElementById("typingRow")?.remove();
-}
-
-async function post(path,data) {
-  const response = await fetch(API + path,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  });
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(result.error || "Request failed (" + response.status + ")");
-  }
-
-  return result;
-}
-
-async function sendMessage() {
-  if (busy) return;
-
-  const input = document.getElementById("prompt");
-  const text = input.value.trim();
-
-  if (currentCategory === "File Assistant" && !attachedText) {
-    alert("Please attach a TXT document first.");
-    return;
-  }
-
-  if (!text && !attachedText && !attachedImage && currentCategory !== "Image Creator") return;
-
-  busy = true;
-  document.getElementById("sendBtn").disabled = true;
-  input.value = "";
-
-  const userText = text || (
-    currentCategory === "Image Creator" ? "Create an image." : "Please analyse this image."
-  );
-
-  addMessage("user",userText,attachedImage?.preview);
-
-  const file = attachedText;
-  const image = attachedImage;
-  attachedText = null;
-  attachedImage = null;
-  document.getElementById("attachment").textContent = "";
-
-  addTyping();
-
-  try {
-    if (currentCategory === "Image Creator") {
-      const result = await post("/image",{prompt:userText});
-      removeTyping();
-      addMessage("assistant","Here is your generated image.",result.image);
-    }
-
-    else if (image && currentCategory !== "Image Creator") {
-      const result = await post("/vision",{
-        prompt:userText || "Describe this image.",
-        image:image.base64,
-        mimeType:image.mimeType
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history, tier })
       });
-      removeTyping();
-      addMessage("assistant",result.reply || "I couldn't understand the image.");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        fullReply += decoder.decode(value, { stream: true });
+        aiDiv.innerHTML = marked.parse(fullReply);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      history.push({ role: "user", text });
+      history.push({ role: "model", text: fullReply });
     }
 
-    else if (currentCategory === "File Assistant") {
-      const result = await post("/document",{
-        question:userText,
-        fileName:file.name,
-        mimeType:file.mimeType,
-        content:file.base64
-      });
-      removeTyping();
-      addMessage("assistant",result.reply || "I couldn't read the document.");
+    function appendMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = `msg ${role}`;
+      div.innerHTML = role === "user" ? text : marked.parse(text);
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return div;
     }
-
-    else {
-      const chat = getCurrentChat();
-      const messages = (chat?.messages || [])
-        .filter(m => m.role === "user" || m.role === "assistant")
-        .map(m => ({role:m.role,content:m.content}))
-        .slice(-20);
-
-      const result = await post("/chat",{messages});
-      removeTyping();
-      addMessage("assistant",result.reply || "I couldn't generate a response.");
-    }
-
-  } catch(error) {
-    removeTyping();
-    addMessage("assistant","Sorry, something went wrong: " + error.message);
-  }
-
-  busy = false;
-  document.getElementById("sendBtn").disabled = false;
-  input.focus();
-}
-
-function suggest(text) {
-  document.getElementById("prompt").value = text;
-  sendMessage();
-}
-
-function renameChat() {
-  const chat = getCurrentChat();
-  if (!chat) {
-    alert("Start a conversation first.");
-    return;
-  }
-  const name = prompt("Enter a new conversation name:",chat.title);
-  if (name && name.trim()) {
-    chat.title = name.trim().slice(0,60);
-    saveChats();
-    renderHistory();
-  }
-}
-
-function deleteChat() {
-  const chat = getCurrentChat();
-  if (!chat) {
-    alert("There is no conversation to delete.");
-    return;
-  }
-  if (!confirm("Delete this conversation?")) return;
-  chats[currentCategory] = chats[currentCategory].filter(c => c.id !== currentChatId);
-  currentChatId = null;
-  saveChats();
-  render();
-  renderHistory();
-}
-
-function showPremium() {
-  currentCategory = "Premium";
-  currentChatId = null;
-  document.getElementById("categoryTitle").textContent = "Premium";
-  document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-  render();
-  closeSidebar();
-}
-
-function premiumHTML() {
-  return `
-    <div class="page">
-      <h1>✦ Upgrade KBAI</h1>
-      <p>Choose the experience that suits you. Premium payments are not connected yet.</p>
-      <div class="plan-grid">
-        <div class="plan">
-          <h2>Free</h2>
-          <div class="price">Free</div>
-          <ul>
-            <li>AI conversations</li>
-            <li>Study and writing assistance</li>
-            <li>Saved conversations in this browser</li>
-            <li>Image tools where available</li>
-          </ul>
-          <button onclick="returnToChat()">Current plan</button>
-        </div>
-        <div class="plan premium">
-          <h2>✦ Premium</h2>
-          <div class="price">Coming soon</div>
-          <ul>
-            <li>Higher usage limits</li>
-            <li>More advanced AI models</li>
-            <li>More image creation capacity</li>
-            <li>Additional productivity features</li>
-          </ul>
-          <button onclick="alert('Premium subscriptions are not available yet. Payment setup is still required.')">Coming soon</button>
-        </div>
-      </div>
-      <div class="notice">No payment will be taken. Subscription and payment services have not been connected.</div>
-    </div>`;
-}
-
-function returnToChat() {
-  switchCategory("Chat");
-}
-
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
-}
-function closeSidebar() {
-  document.getElementById("sidebar").classList.remove("open");
-}
-
-document.getElementById("prompt").addEventListener("keydown",event => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-});
-
-document.getElementById("prompt").addEventListener("input",event => {
-  event.target.style.height = "auto";
-  event.target.style.height = Math.min(event.target.scrollHeight,170) + "px";
-});
-
-document.getElementById("fileInput").addEventListener("change",async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  if (!file.name.toLowerCase().endsWith(".txt")) {
-    alert("This version accepts TXT files only. PDF and Word support needs a backend upgrade.");
-    event.target.value = "";
-    return;
-  }
-
-  if (file.size > 200000) {
-    alert("Please choose a TXT file smaller than 200 KB.");
-    event.target.value = "";
-    return;
-  }
-
-  const base64 = await toBase64(file);
-  attachedText = {
-    name:file.name,
-    mimeType:file.type || "text/plain",
-    base64:base64
-  };
-  document.getElementById("attachment").textContent = "Attached: " + file.name;
-  switchCategory("File Assistant");
-  event.target.value = "";
-});
-
-document.getElementById("imageInput").addEventListener("change",async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  if (file.size > 5 * 1024 * 1024) {
-    alert("Please choose an image smaller than 5 MB.");
-    event.target.value = "";
-    return;
-  }
-
-  const base64 = await toBase64(file);
-  attachedImage = {
-    base64,
-    mimeType:file.type,
-    preview:"data:" + file.type + ";base64," + base64
-  };
-  document.getElementById("attachment").textContent = "Image attached: " + file.name;
-  event.target.value = "";
-});
-
-function toBase64(file) {
-  return new Promise((resolve,reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-loadChats();
-render();
-renderHistory();
-</script>
+  </script>
 </body>
 </html>
+'''
+}
+
+for filepath, content in files.items():
+    directory = os.path.dirname(filepath)
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory)
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"Created: {filepath}")
+
+print("\\n✨ All project files generated successfully! You can now delete setup.py and push to GitHub.")
