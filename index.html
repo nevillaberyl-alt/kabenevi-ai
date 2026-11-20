@@ -3,778 +3,218 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080808">
 <title>KBAI — Kabenevi AI</title>
-
 <style>
-:root {
-  --bg:#080808;
-  --panel:#111;
-  --panel2:#181818;
-  --line:#292929;
-  --text:#f5f5f5;
-  --muted:#999;
-  --silver:#d8d8d8;
-}
-* { box-sizing:border-box; }
-body {
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font:15px/1.5 Arial, sans-serif;
-  min-height:100vh;
-}
-button,input,textarea { font:inherit; }
-button { cursor:pointer; }
-
-.app {
-  display:grid;
-  grid-template-columns:260px 1fr;
-  min-height:100vh;
-}
-.sidebar {
-  background:#0d0d0d;
-  border-right:1px solid var(--line);
-  padding:20px 14px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-}
-.brand {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:5px 8px 18px;
-  border-bottom:1px solid var(--line);
-}
-.logo {
-  width:43px;
-  height:43px;
-  display:grid;
-  place-items:center;
-  border:1px solid #777;
-  border-radius:13px;
-  color:white;
-  font-size:29px;
-  font-weight:900;
-  background:linear-gradient(145deg,#333,#080808 55%,#555);
-  box-shadow:inset 0 0 12px #7775,0 0 16px #fff1;
-  text-shadow:0 0 9px #fff8;
-}
-.brand-name { font-weight:900;letter-spacing:2px; }
-.brand-tag {
-  font-size:9px;
-  color:var(--muted);
-  letter-spacing:1.3px;
-}
-.new-chat,.nav-button,.history-item {
-  width:100%;
-  padding:11px 12px;
-  border:1px solid transparent;
-  border-radius:10px;
-  background:transparent;
-  color:var(--text);
-  text-align:left;
-}
-.new-chat {
-  border-color:#444;
-  background:#191919;
-}
-.new-chat:hover,.nav-button:hover,.history-item:hover {
-  background:#242424;
-}
-.section-label {
-  color:#777;
-  font-size:10px;
-  letter-spacing:1.5px;
-  margin:7px 8px;
-}
-.nav-button.active {
-  background:#252525;
-  border-color:#444;
-}
-.history {
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  overflow:auto;
-  max-height:40vh;
-}
-.history-item {
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  color:#bbb;
-  font-size:13px;
-}
-.sidebar-bottom {
-  margin-top:auto;
-  border-top:1px solid var(--line);
-  padding-top:12px;
-}
-.main {
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  min-height:100vh;
-}
-.topbar {
-  height:65px;
-  padding:0 25px;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#0b0b0b;
-}
-.top-title { font-weight:700; }
-.connection {
-  color:#aaa;
-  font-size:12px;
-}
-.connection::before {
-  content:"";
-  display:inline-block;
-  width:7px;
-  height:7px;
-  border-radius:50%;
-  background:#aaa;
-  margin-right:7px;
-}
-.content {
-  width:min(100%,1000px);
-  margin:0 auto;
-  padding:30px 22px;
-  display:flex;
-  flex-direction:column;
-  flex:1;
-}
-.welcome {
-  text-align:center;
-  margin:35px 0 28px;
-}
-.welcome-logo {
-  width:65px;
-  height:65px;
-  border:1px solid #666;
-  border-radius:19px;
-  display:grid;
-  place-items:center;
-  margin:0 auto 18px;
-  font-size:43px;
-  font-weight:900;
-  background:linear-gradient(145deg,#444,#090909 60%,#777);
-  text-shadow:0 0 12px white;
-}
-.welcome h1 {
-  font-size:clamp(27px,5vw,43px);
-  margin:0 0 8px;
-  letter-spacing:-1px;
-}
-.welcome p { color:var(--muted);margin:0; }
-.messages {
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  flex:1;
-  padding:15px 0 25px;
-}
-.msg {
-  max-width:85%;
-  padding:13px 16px;
-  border-radius:15px;
-  white-space:pre-wrap;
-  overflow-wrap:anywhere;
-}
-.msg.bot {
-  align-self:flex-start;
-  background:#171717;
-  border:1px solid #303030;
-}
-.msg.user {
-  align-self:flex-end;
-  background:#292929;
-  border:1px solid #484848;
-}
-.msg-label {
-  font-size:10px;
-  color:#999;
-  letter-spacing:1px;
-  margin-bottom:5px;
-}
-.composer-area {
-  position:sticky;
-  bottom:0;
-  background:linear-gradient(transparent,#080808 20%);
-  padding:15px 0 20px;
-}
-.composer {
-  border:1px solid #444;
-  border-radius:17px;
-  background:#141414;
-  padding:12px;
-  box-shadow:0 8px 35px #0008;
-}
-#prompt {
-  width:100%;
-  min-height:48px;
-  max-height:160px;
-  resize:vertical;
-  border:0;
-  outline:none;
-  background:transparent;
-  color:white;
-  padding:10px;
-}
-.composer-actions {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-.action-group {
-  display:flex;
-  gap:7px;
-  flex-wrap:wrap;
-}
-.action {
-  border:1px solid #444;
-  background:#202020;
-  color:white;
-  padding:8px 12px;
-  border-radius:9px;
-}
-.action:hover { background:#333; }
-.send {
-  background:#eee;
-  color:#080808;
-  border:0;
-  font-weight:800;
-  padding:9px 19px;
-}
-.send:hover { background:white; }
-.send:disabled { opacity:.5;cursor:wait; }
-.small-note {
-  text-align:center;
-  color:#777;
-  font-size:11px;
-  margin-top:10px;
-}
-.file-preview {
-  display:none;
-  padding:9px;
-  margin-bottom:8px;
-  background:#222;
-  border-radius:9px;
-  color:#ccc;
-  font-size:12px;
-}
-.file-preview.show { display:block; }
-.file-preview img {
-  max-width:90px;
-  max-height:75px;
-  display:block;
-  margin-bottom:7px;
-  border-radius:7px;
-}
-.typing { color:#aaa;font-size:13px; }
-footer {
-  color:#666;
-  text-align:center;
-  padding:15px;
-  font-size:11px;
-}
-@media(max-width:760px) {
-  .app { grid-template-columns:1fr; }
-  .sidebar {
-    border-right:0;
-    border-bottom:1px solid var(--line);
-    padding:10px;
-  }
-  .brand { padding-bottom:10px; }
-  .sidebar-tools {
-    display:flex;
-    overflow-x:auto;
-    gap:5px;
-  }
-  .sidebar-tools .nav-button {
-    width:auto;
-    white-space:nowrap;
-    font-size:12px;
-  }
-  .section-label,.history,.sidebar-bottom { display:none; }
-  .new-chat { width:100%; }
-  .topbar { padding:0 15px;height:55px; }
-  .content { padding:15px 13px; }
-  .welcome { margin:28px 0 18px; }
-  .msg { max-width:95%; }
+:root{color-scheme:dark;--bg:#080808;--panel:#111;--line:#292929;--muted:#999;--white:#f5f5f5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,Arial,sans-serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:260px;background:#0d0d0d;border-right:1px solid var(--line);padding:22px 15px;display:flex;flex-direction:column;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;padding:8px 7px 25px}
+.logo{width:43px;height:43px;border:1px solid #aaa;border-radius:13px;display:grid;place-items:center;font-size:27px;font-weight:800;background:linear-gradient(135deg,#fff,#555);color:#080808}
+.brand strong{letter-spacing:2px;font-size:17px}
+.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:1.5px;margin-top:5px}
+.new,.tool,.sidebottom button{width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#ddd;padding:12px;border-radius:10px}
+.new{border-color:#444;background:#171717;margin-bottom:12px}
+.tool:hover,.tool.active,.sidebottom button:hover{background:#202020;border-color:#333}
+.section-label{color:#777;font-size:10px;letter-spacing:1.5px;margin:12px 8px 3px}
+.sidebottom{margin-top:auto;display:grid;gap:5px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:65px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px}
+.top span{color:#aaa;font-size:13px}
+.status{font-size:11px;color:#aaa}
+.content{width:min(900px,100%);margin:auto;padding:35px 22px;flex:1;display:flex;flex-direction:column}
+.welcome{text-align:center;margin:35px 0 28px}
+.welcome .mark{font-size:30px;color:#ccc}
+h1{font-size:clamp(27px,5vw,42px);margin:12px 0}
+.welcome p{color:var(--muted);font-size:14px}
+.messages{display:flex;flex-direction:column;gap:16px;flex:1}
+.msg{max-width:85%;padding:14px 17px;border:1px solid var(--line);border-radius:15px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:#202020}
+.msg.bot{align-self:flex-start;background:#111}
+.msg img{max-width:100%;border-radius:10px;margin-top:10px}
+.composer{position:sticky;bottom:0;background:linear-gradient(transparent,#080808 18%);padding:20px 0 8px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.small{border:1px solid #333;background:#111;color:#ddd;padding:8px 11px;border-radius:9px;font-size:12px}
+.entry{display:flex;gap:9px;background:#151515;border:1px solid #383838;border-radius:16px;padding:9px}
+.entry textarea{flex:1;resize:vertical;min-height:44px;max-height:150px;background:transparent;border:0;outline:0;color:white;padding:12px}
+.send{background:#f3f3f3;color:#080808;border:0;border-radius:11px;padding:0 19px;font-weight:700}
+.hint{color:#777;text-align:center;font-size:10px;margin-top:10px}
+.preview{max-width:150px;max-height:120px;border-radius:9px;display:none;margin:8px 0}
+.mobile-menu{display:none}
+@media(max-width:720px){
+.sidebar{position:fixed;z-index:5;top:0;bottom:0;left:-275px;transition:left .2s;box-shadow:10px 0 40px #000}
+.sidebar.open{left:0}.mobile-menu{display:inline-block;background:none;color:white;border:0;font-size:22px}
+.top{padding:0 14px}.content{padding:20px 13px}.msg{max-width:95%}
 }
 </style>
 </head>
-
 <body>
 <div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="logo">K</div><div><strong>KBAI</strong><small>KABENEVI AI STUDIO</small></div></div>
+  <button class="new" id="newChat">＋ New chat</button>
+  <div class="section-label">AI TOOLS</div>
+  <button class="tool active" data-mode="Chat">✧ AI Chat</button>
+  <button class="tool" data-mode="Study Assistant">▤ Study Assistant</button>
+  <button class="tool" data-mode="Writing Assistant">✎ Writing Assistant</button>
+  <button class="tool" data-mode="Image Creator">▧ Image Creator</button>
+  <button class="tool" data-mode="Image Understanding">◉ Image Understanding</button>
+  <button class="tool" data-mode="Voice Assistant">◖ Voice Assistant</button>
+  <button class="tool" data-mode="Web Search">⌕ Web Search</button>
+  <button class="tool" data-mode="Video Creator">▶ Video Creator</button>
+  <button class="tool" data-mode="File Assistant">▱ File Assistant</button>
+  <div class="sidebottom">
+    <div class="section-label">PERSONAL</div>
+    <button id="historyButton">◷ Chat history</button>
+    <button id="settingsButton">⚙ Settings</button>
+  </div>
+</aside>
 
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logo">K</div>
-      <div>
-        <div class="brand-name">KBAI</div>
-        <div class="brand-tag">KABENEVI AI</div>
-      </div>
+<main class="main">
+<header class="top">
+  <div><button class="mobile-menu" id="menu">☰</button> <span id="modeTitle">Kabenevi AI</span></div>
+  <div class="status" id="status">● Ready</div>
+</header>
+<section class="content">
+  <div class="welcome" id="welcome">
+    <div class="mark">✦</div>
+    <h1>Meet your intelligence.</h1>
+    <p>Ask, learn, create and explore with Kabenevi AI.</p>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="composer">
+    <img class="preview" id="preview" alt="Selected file preview">
+    <div class="tools">
+      <button class="small" id="upload">＋ Attach file</button>
+      <input id="fileInput" type="file" accept="image/*,.pdf,.txt,.md" hidden>
+      <button class="small" id="speak">🎙 Voice input</button>
+      <button class="small" id="read">🔊 Read replies: Off</button>
+      <button class="small" id="clear">Clear chat</button>
     </div>
-
-    <button class="new-chat" id="newChat">＋ New chat</button>
-
-    <div>
-      <div class="section-label">AI TOOLKIT</div>
-      <div class="sidebar-tools">
-        <button class="nav-button active" data-mode="Chat">✧ AI Chat</button>
-        <button class="nav-button" data-mode="Study Assistant">▤ Study</button>
-        <button class="nav-button" data-mode="Writing Assistant">✎ Writing</button>
-        <button class="nav-button" data-mode="Voice Assistant">◖ Voice</button>
-        <button class="nav-button" data-mode="Image Creator">▧ Image Creator</button>
-        <button class="nav-button" data-mode="Image Understanding">▧ Picture Analysis</button>
-        <button class="nav-button" data-mode="Web Search">◎ Web Search</button>
-        <button class="nav-button" data-mode="Video Creator">▶ Video Studio</button>
-        <button class="nav-button" data-mode="File Assistant">▱ File Assistant</button>
-      </div>
+    <div class="entry">
+      <textarea id="prompt" rows="1" placeholder="Message Kabenevi AI..."></textarea>
+      <button class="send" id="send">Send ↑</button>
     </div>
-
-    <div>
-      <div class="section-label">RECENT CHATS</div>
-      <div class="history" id="history"></div>
-    </div>
-
-    <div class="sidebar-bottom">
-      <button class="nav-button" id="clearHistory">Clear all history</button>
-      <div class="brand-tag" style="padding:12px 8px">
-        KABENEVI AI · YOUR WORLD, YOUR INTELLIGENCE
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <div class="top-title" id="modeTitle">Kabenevi Chat</div>
-      <div class="connection" id="status">Ready</div>
-    </header>
-
-    <div class="content">
-      <section class="welcome" id="welcome">
-        <div class="welcome-logo">K</div>
-        <h1>Welcome to Kabenevi AI</h1>
-        <p>Your space to think, learn, create and explore.</p>
-      </section>
-
-      <section class="messages" id="messages" aria-live="polite"></section>
-
-      <section class="composer-area">
-        <div class="composer">
-          <div class="file-preview" id="filePreview">
-            <img id="previewImage" alt="Selected image preview">
-            <span id="fileName"></span>
-            <button class="action" id="removeFile">Remove</button>
-          </div>
-
-          <textarea id="prompt" rows="1"
-            placeholder="Message Kabenevi AI..."></textarea>
-
-          <div class="composer-actions">
-            <div class="action-group">
-              <button class="action" id="uploadButton">＋ Attach</button>
-              <input id="fileInput" type="file"
-                accept="image/*,.txt,.pdf,.doc,.docx" hidden>
-
-              <button class="action" id="voiceButton">🎙 Voice</button>
-              <button class="action" id="readButton">🔊 Read: Off</button>
-            </div>
-            <button class="action send" id="sendButton">Send ↗</button>
-          </div>
-        </div>
-        <div class="small-note">
-          Kabenevi AI can make mistakes. Check important information.
-        </div>
-      </section>
-    </div>
-
-    <footer>© 2026 Kabenevi AI · Independent AI project</footer>
-  </main>
+    <div class="hint">KBAI can make mistakes. Check important information.</div>
+  </div>
+</section>
+</main>
 </div>
-
 <script>
-/* KEEP THIS ADDRESS: IT IS YOUR EXISTING WORKER */
-const API_URL = "https://kabenevi-ai.nevillaberyl.workers.dev/chat";
+const API="https://kabenevi-ai.nevillaberyl.workers.dev";
+const $=s=>document.querySelector(s);
+const messages=$("#messages"),promptBox=$("#prompt"),statusBox=$("#status");
+let mode="Chat",history=[],file=null,readReplies=false,busy=false;
 
-const messagesBox = document.getElementById("messages");
-const promptBox = document.getElementById("prompt");
-const sendButton = document.getElementById("sendButton");
-const status = document.getElementById("status");
-const historyBox = document.getElementById("history");
-const welcome = document.getElementById("welcome");
-
-let mode = "Chat";
-let conversation = [];
-let readReplies = false;
-let busy = false;
-let currentChatId = null;
-let selectedFile = null;
-let chats = loadChats();
-
-function loadChats() {
-  try {
-    return JSON.parse(localStorage.getItem("kbai_chats") || "[]");
-  } catch {
-    return [];
-  }
+function addMessage(text,who="bot",image=null){
+ const el=document.createElement("div");
+ el.className="msg "+who;
+ el.textContent=text;
+ if(image){const img=document.createElement("img");img.src=image;img.alt="Generated image";el.appendChild(img)}
+ messages.appendChild(el);
+ messages.scrollTop=messages.scrollHeight;
+ $("#welcome").style.display="none";
+ return el;
 }
-
-function saveChats() {
-  try {
-    localStorage.setItem("kbai_chats", JSON.stringify(chats));
-  } catch (error) {
-    console.warn("Chat history could not be saved.", error);
-  }
+function setStatus(t){statusBox.textContent="● "+t}
+function selectMode(next){
+ mode=next;$("#modeTitle").textContent="Kabenevi "+next;
+ document.querySelectorAll(".tool").forEach(b=>b.classList.toggle("active",b.dataset.mode===next));
+ const hints={
+ "Chat":"Message Kabenevi AI...",
+ "Study Assistant":"Ask a study question...",
+ "Writing Assistant":"What would you like to write?",
+ "Image Creator":"Describe the image you want to create...",
+ "Image Understanding":"Upload a picture and ask about it...",
+ "Voice Assistant":"Type a message or use voice input...",
+ "Web Search":"What would you like to search for?",
+ "Video Creator":"Describe the video you want to create...",
+ "File Assistant":"Ask a question about your uploaded file..."
+ };
+ promptBox.placeholder=hints[next]||"Message Kabenevi AI...";
+ $("#sidebar").classList.remove("open");
 }
+document.querySelectorAll(".tool").forEach(b=>b.onclick=()=>selectMode(b.dataset.mode));
+$("#menu").onclick=()=>$("#sidebar").classList.toggle("open");
+$("#newChat").onclick=()=>{messages.innerHTML="";history=[];file=null;$("#preview").style.display="none";$("#welcome").style.display="block";setStatus("Ready")};
+$("#clear").onclick=()=>{messages.innerHTML="";history=[];$("#welcome").style.display="block";setStatus("Ready")};
 
-function newId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+$("#upload").onclick=()=>$("#fileInput").click();
+$("#fileInput").onchange=async e=>{
+ file=e.target.files[0];if(!file)return;
+ if(file.size>8*1024*1024){addMessage("Please choose a file smaller than 8 MB.");file=null;return}
+ const img=$("#preview");
+ if(file.type.startsWith("image/")){img.src=URL.createObjectURL(file);img.style.display="block"}
+ else{img.style.display="none";addMessage("Selected file: "+file.name+". File reading will be connected in the next backend upgrade.")}
+};
+
+function toBase64(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(",")[1]);r.onerror=reject;r.readAsDataURL(f)})}
+
+async function post(path,body){
+ const res=await fetch(API+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(data.error||data.message||"Service error "+res.status);
+ return data;
 }
-
-function showWelcome(show) {
-  welcome.style.display = show ? "block" : "none";
+async function send(){
+ const text=promptBox.value.trim();
+ if(!text||busy)return;
+ busy=true;$("#send").disabled=true;addMessage(text,"user");promptBox.value="";
+ setStatus("Working...");
+ try{
+  let data;
+  if(mode==="Image Creator"){
+    data=await post("/image",{prompt:text});
+    const image=data.image||data.url;
+    if(!image)throw new Error("The image service did not return an image.");
+    addMessage("Your image is ready.","bot",image);
+  }else if(mode==="Image Understanding"){
+    if(!file||!file.type.startsWith("image/"))throw new Error("Please attach an image first.");
+    data=await post("/vision",{prompt:text,image:await toBase64(file),mimeType:file.type});
+    addMessage(data.reply||data.description||"No description was returned.");
+  }else if(mode==="Web Search"){
+    data=await post("/search",{query:text});
+    addMessage(data.reply||data.results||"No search results returned.");
+  }else if(mode==="Video Creator"){
+    data=await post("/video",{prompt:text});
+    addMessage(data.message||data.status||"Video request submitted.");
+    if(data.url)addMessage("Video link: "+data.url);
+  }else if(mode==="File Assistant"){
+    if(!file)throw new Error("Please attach a supported file first.");
+    data=await post("/document",{question:text,fileName:file.name,mimeType:file.type,content:await toBase64(file)});
+    addMessage(data.reply||"No document response returned.");
+  }else{
+    let message=text;
+    if(mode==="Study Assistant")message="You are a helpful study tutor. Explain step by step in clear language. "+text;
+    if(mode==="Writing Assistant")message="You are a writing assistant. Help improve and draft writing. "+text;
+    history.push({role:"user",content:message});
+    data=await post("/chat",{messages:history});
+    const reply=data.reply||data.response||"I did not receive a reply.";
+    history.push({role:"assistant",content:reply});
+    addMessage(reply);
+    if(readReplies&&"speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(reply))}
+  }
+  setStatus("Ready");
+ }catch(err){addMessage("I couldn't complete that request: "+err.message+". The required backend service may not be connected yet.");setStatus("Connection issue")}
+ finally{busy=false;$("#send").disabled=false;file=null;$("#fileInput").value="";$("#preview").style.display="none"}
 }
-
-function addMessage(text, who) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "msg " + who;
-
-  const label = document.createElement("div");
-  label.className = "msg-label";
-  label.textContent = who === "user" ? "YOU" : "KABENEVI AI";
-
-  const content = document.createElement("div");
-  content.textContent = text;
-
-  wrapper.appendChild(label);
-  wrapper.appendChild(content);
-  messagesBox.appendChild(wrapper);
-  messagesBox.scrollTop = messagesBox.scrollHeight;
-}
-
-function updateHistory() {
-  historyBox.innerHTML = "";
-
-  chats.slice(0,30).forEach(chat => {
-    const button = document.createElement("button");
-    button.className = "history-item";
-    button.textContent = chat.title || "New conversation";
-    button.title = chat.title || "New conversation";
-
-    button.addEventListener("click", () => openChat(chat.id));
-    historyBox.appendChild(button);
-  });
-}
-
-function storeCurrentChat() {
-  if (!conversation.length) return;
-
-  if (!currentChatId) currentChatId = newId();
-
-  let chat = chats.find(item => item.id === currentChatId);
-
-  if (!chat) {
-    chat = {
-      id: currentChatId,
-      title: conversation.find(m => m.role === "user")?.content
-        ?.slice(0,35) || "New conversation",
-      messages: []
-    };
-    chats.unshift(chat);
-  }
-
-  chat.messages = conversation;
-  chat.updated = Date.now();
-
-  chats.sort((a,b) => (b.updated || 0) - (a.updated || 0));
-  chats = chats.slice(0,30);
-
-  saveChats();
-  updateHistory();
-}
-
-function openChat(id) {
-  const chat = chats.find(item => item.id === id);
-  if (!chat) return;
-
-  currentChatId = id;
-  conversation = chat.messages || [];
-  messagesBox.innerHTML = "";
-  showWelcome(conversation.length === 0);
-
-  conversation.forEach(message => {
-    addMessage(
-      message.content,
-      message.role === "user" ? "user" : "bot"
-    );
-  });
-
-  status.textContent = "History loaded";
-}
-
-function startNewChat() {
-  conversation = [];
-  currentChatId = null;
-  messagesBox.innerHTML = "";
-  showWelcome(true);
-  status.textContent = "Ready";
-  promptBox.value = "";
-}
-
-document.getElementById("newChat").addEventListener("click", startNewChat);
-
-document.getElementById("clearHistory").addEventListener("click", () => {
-  if (!confirm("Delete all saved conversations?")) return;
-  chats = [];
-  saveChats();
-  updateHistory();
-  startNewChat();
-});
-
-function selectMode(nextMode) {
-  mode = nextMode;
-  document.getElementById("modeTitle").textContent = "Kabenevi " + mode;
-
-  document.querySelectorAll(".nav-button[data-mode]").forEach(button => {
-    button.classList.toggle("active", button.dataset.mode === mode);
-  });
-
-  const placeholders = {
-    "Chat": "Message Kabenevi AI...",
-    "Study Assistant": "Ask a study question...",
-    "Writing Assistant": "What would you like to write?",
-    "Voice Assistant": "Type here or use the Voice button..."
-  };
-
-  promptBox.placeholder =
-    placeholders[mode] || "This feature needs an additional service connection.";
-
-  if (mode === "Voice Assistant") {
-    addMessage("Voice mode selected. Use the Voice button to speak, or type your message.", "bot");
-  } else if (["Image Creator","Image Understanding","Web Search","Video Creator","File Assistant"].includes(mode)) {
-    addMessage(
-      mode + " needs its own secure service integration before it can work. Your existing chat connection is still available.",
-      "bot"
-    );
-  }
-}
-
-document.querySelectorAll(".nav-button[data-mode]").forEach(button => {
-  button.addEventListener("click", () => selectMode(button.dataset.mode));
-});
-
-function speak(text) {
-  if (!readReplies || !("speechSynthesis" in window)) return;
-
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  window.speechSynthesis.speak(utterance);
-}
-
-async function sendMessage() {
-  const message = promptBox.value.trim();
-
-  if (!message || busy) return;
-
-  if (!["Chat","Study Assistant","Writing Assistant","Voice Assistant"].includes(mode)) {
-    addMessage("Please choose AI Chat, Study, Writing or Voice to send a message.", "bot");
-    return;
-  }
-
-  let finalMessage = message;
-
-  if (mode === "Study Assistant") {
-    finalMessage =
-      "Act as a patient study assistant. Explain clearly, step by step, and give examples where useful. Student question: " + message;
-  }
-
-  if (mode === "Writing Assistant") {
-    finalMessage =
-      "Act as a helpful writing assistant. Help draft, improve or explain writing clearly. Writing request: " + message;
-  }
-
-  if (mode === "Voice Assistant") {
-    finalMessage =
-      "Respond conversationally and clearly. " + message;
-  }
-
-  showWelcome(false);
-  addMessage(message, "user");
-
-  promptBox.value = "";
-  busy = true;
-  sendButton.disabled = true;
-  status.textContent = "Connecting...";
-
-  const outgoing = [
-    ...conversation,
-    { role:"user", content:finalMessage }
-  ].slice(-20);
-
-  try {
-    const response = await fetch(API_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ messages:outgoing })
-    });
-
-    let data;
-
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error("The server returned an unreadable response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(data.error || "Server error: " + response.status);
-    }
-
-    if (!data.reply || typeof data.reply !== "string") {
-      throw new Error("The server did not return a reply.");
-    }
-
-    conversation = [
-      ...outgoing,
-      { role:"assistant", content:data.reply }
-    ].slice(-20);
-
-    addMessage(data.reply, "bot");
-    speak(data.reply);
-    storeCurrentChat();
-    status.textContent = "Connected";
-
-  } catch (error) {
-    addMessage("Connection problem: " + error.message, "bot");
-    status.textContent = "Connection issue";
-  } finally {
-    busy = false;
-    sendButton.disabled = false;
-    promptBox.focus();
-  }
-}
-
-sendButton.addEventListener("click", sendMessage);
-
-promptBox.addEventListener("keydown", event => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-});
-
-document.getElementById("readButton").addEventListener("click", () => {
-  readReplies = !readReplies;
-
-  document.getElementById("readButton").textContent =
-    "🔊 Read: " + (readReplies ? "On" : "Off");
-
-  if (!readReplies && "speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
-});
-
-document.getElementById("voiceButton").addEventListener("click", () => {
-  const Recognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!Recognition) {
-    addMessage("Voice input is not supported in this browser. You can type instead.", "bot");
-    return;
-  }
-
-  const recognition = new Recognition();
-  recognition.lang = "en-US";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  status.textContent = "Listening...";
-
-  recognition.onresult = event => {
-    promptBox.value = event.results[0][0].transcript;
-    status.textContent = "Voice received";
-    promptBox.focus();
-  };
-
-  recognition.onerror = () => {
-    status.textContent = "Voice unavailable";
-    addMessage("I couldn't receive your voice. Please try again or type your message.", "bot");
-  };
-
-  recognition.onend = () => {
-    if (status.textContent === "Listening...") {
-      status.textContent = "Ready";
-    }
-  };
-
-  try {
-    recognition.start();
-  } catch {
-    status.textContent = "Voice unavailable";
-  }
-});
-
-/* File selection and local preview.
-   Files are not sent to the AI until a secure file service is connected. */
-const fileInput = document.getElementById("fileInput");
-const filePreview = document.getElementById("filePreview");
-const previewImage = document.getElementById("previewImage");
-
-document.getElementById("uploadButton").addEventListener("click", () => {
-  fileInput.click();
-});
-
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files[0];
-  if (!file) return;
-
-  if (file.size > 10 * 1024 * 1024) {
-    addMessage("Please choose a file smaller than 10 MB.", "bot");
-    fileInput.value = "";
-    return;
-  }
-
-  selectedFile = file;
-  document.getElementById("fileName").textContent =
-    file.name + " — selected for preview";
-
-  if (file.type.startsWith("image/")) {
-    previewImage.src = URL.createObjectURL(file);
-    previewImage.style.display = "block";
-  } else {
-    previewImage.style.display = "none";
-    previewImage.removeAttribute("src");
-  }
-
-  filePreview.classList.add("show");
-  addMessage("File selected. It is not being sent for AI analysis yet.", "bot");
-});
-
-document.getElementById("removeFile").addEventListener("click", () => {
-  if (previewImage.src.startsWith("blob:")) {
-    URL.revokeObjectURL(previewImage.src);
-  }
-
-  selectedFile = null;
-  fileInput.value = "";
-  previewImage.removeAttribute("src");
-  filePreview.classList.remove("show");
-});
-
-updateHistory();
+$("#send").onclick=send;
+promptBox.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+$("#read").onclick=()=>{readReplies=!readReplies;$("#read").textContent="🔊 Read replies: "+(readReplies?"On":"Off");if(!readReplies&&"speechSynthesis"in window)speechSynthesis.cancel()};
+$("#speak").onclick=()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){addMessage("Voice input is not supported in this browser.");return}
+ const rec=new SR();rec.lang="en-US";rec.onstart=()=>setStatus("Listening...");
+ rec.onresult=e=>{promptBox.value=e.results[0][0].transcript;setStatus("Ready")};
+ rec.onerror=()=>setStatus("Voice unavailable");rec.onend=()=>setStatus("Ready");rec.start();
+};
+$("#historyButton").onclick=()=>addMessage("This browser session keeps the current conversation. Permanent synced accounts and cloud history are a later upgrade.");
+$("#settingsButton").onclick=()=>addMessage("Settings and account preferences will be added in a later upgrade.");
 </script>
 </body>
 </html>
