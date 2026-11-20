@@ -3,218 +3,220 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080808">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090909">
 <title>KBAI — Kabenevi AI</title>
 <style>
-:root{color-scheme:dark;--bg:#080808;--panel:#111;--line:#292929;--muted:#999;--white:#f5f5f5}
+:root{color-scheme:dark;--bg:#090909;--panel:#111;--panel2:#191919;--line:#292929;--text:#f5f5f5;--muted:#999}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;height:100vh;overflow:hidden}
 button,input,textarea{font:inherit}
-button{cursor:pointer}
-.app{display:flex;min-height:100vh}
-.sidebar{width:260px;background:#0d0d0d;border-right:1px solid var(--line);padding:22px 15px;display:flex;flex-direction:column;gap:12px}
-.brand{display:flex;align-items:center;gap:12px;padding:8px 7px 25px}
-.logo{width:43px;height:43px;border:1px solid #aaa;border-radius:13px;display:grid;place-items:center;font-size:27px;font-weight:800;background:linear-gradient(135deg,#fff,#555);color:#080808}
-.brand strong{letter-spacing:2px;font-size:17px}
-.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:1.5px;margin-top:5px}
-.new,.tool,.sidebottom button{width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#ddd;padding:12px;border-radius:10px}
-.new{border-color:#444;background:#171717;margin-bottom:12px}
-.tool:hover,.tool.active,.sidebottom button:hover{background:#202020;border-color:#333}
-.section-label{color:#777;font-size:10px;letter-spacing:1.5px;margin:12px 8px 3px}
-.sidebottom{margin-top:auto;display:grid;gap:5px}
+button{cursor:pointer;color:inherit}
+.app{height:100vh;display:flex}
+.sidebar{width:260px;background:#0d0d0d;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:18px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 20px}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#fff,#777 48%,#eee);color:#080808;display:grid;place-items:center;font-size:30px;font-weight:900;box-shadow:0 0 22px #ffffff18}
+.brand strong{font-size:19px;letter-spacing:2px}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px;margin-top:3px}
+.newchat,.nav button{border:1px solid var(--line);background:transparent;border-radius:11px;padding:12px;text-align:left;width:100%;display:flex;align-items:center;gap:11px;color:#ddd}
+.newchat{background:#f1f1f1;color:#080808;font-weight:700;justify-content:center}
+.nav{display:grid;gap:7px}
+.nav button{border-color:transparent;color:#aaa}
+.nav button:hover,.nav button.active{background:#202020;color:white;border-color:#303030}
+.sidebar-bottom{margin-top:auto;color:#777;font-size:12px;padding:12px}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
-.top{height:65px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px}
-.top span{color:#aaa;font-size:13px}
-.status{font-size:11px;color:#aaa}
-.content{width:min(900px,100%);margin:auto;padding:35px 22px;flex:1;display:flex;flex-direction:column}
-.welcome{text-align:center;margin:35px 0 28px}
-.welcome .mark{font-size:30px;color:#ccc}
-h1{font-size:clamp(27px,5vw,42px);margin:12px 0}
-.welcome p{color:var(--muted);font-size:14px}
-.messages{display:flex;flex-direction:column;gap:16px;flex:1}
-.msg{max-width:85%;padding:14px 17px;border:1px solid var(--line);border-radius:15px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
-.msg.user{align-self:flex-end;background:#202020}
-.msg.bot{align-self:flex-start;background:#111}
-.msg img{max-width:100%;border-radius:10px;margin-top:10px}
-.composer{position:sticky;bottom:0;background:linear-gradient(transparent,#080808 18%);padding:20px 0 8px}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.small{border:1px solid #333;background:#111;color:#ddd;padding:8px 11px;border-radius:9px;font-size:12px}
-.entry{display:flex;gap:9px;background:#151515;border:1px solid #383838;border-radius:16px;padding:9px}
-.entry textarea{flex:1;resize:vertical;min-height:44px;max-height:150px;background:transparent;border:0;outline:0;color:white;padding:12px}
-.send{background:#f3f3f3;color:#080808;border:0;border-radius:11px;padding:0 19px;font-weight:700}
-.hint{color:#777;text-align:center;font-size:10px;margin-top:10px}
-.preview{max-width:150px;max-height:120px;border-radius:9px;display:none;margin:8px 0}
-.mobile-menu{display:none}
-@media(max-width:720px){
-.sidebar{position:fixed;z-index:5;top:0;bottom:0;left:-275px;transition:left .2s;box-shadow:10px 0 40px #000}
-.sidebar.open{left:0}.mobile-menu{display:inline-block;background:none;color:white;border:0;font-size:22px}
-.top{padding:0 14px}.content{padding:20px 13px}.msg{max-width:95%}
-}
+.topbar{height:65px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.topbar span{color:#aaa;font-size:13px}
+.top-actions{display:flex;gap:8px}
+.smallbtn{background:#171717;border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+.content{flex:1;overflow:auto;padding:28px 18px 20px}
+.welcome{max-width:760px;margin:9vh auto 35px;text-align:center}
+.welcome-logo{width:65px;height:65px;border-radius:19px;font-size:45px;margin:auto auto 22px}
+h1{font-size:clamp(27px,5vw,42px);margin:0 0 12px;letter-spacing:-1.5px}
+.subtitle{color:#999;font-size:14px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:30px}
+.suggestion{border:1px solid var(--line);background:#111;border-radius:13px;padding:15px;text-align:left;color:#ddd}
+.suggestion:hover{background:#1b1b1b}
+.messages{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.message{display:flex;gap:12px;align-items:flex-start;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.avatar{width:30px;height:30px;border-radius:10px;background:#eee;color:#080808;display:grid;place-items:center;font-weight:900;flex-shrink:0}
+.message.user .avatar{background:#292929;color:white}
+.bubble{padding:4px 0;max-width:100%}
+.bubble img{max-width:min(100%,500px);border-radius:13px;display:block;margin-top:10px}
+.composer-wrap{padding:12px 18px 20px;background:linear-gradient(transparent,#090909 20%)}
+.composer{max-width:820px;margin:auto;border:1px solid #333;background:#151515;border-radius:18px;padding:12px;box-shadow:0 10px 40px #0008}
+textarea{width:100%;resize:none;min-height:48px;max-height:150px;border:0;outline:0;background:transparent;color:white;padding:8px;font-size:15px}
+.tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tool{background:#222;border:1px solid #333;border-radius:9px;padding:8px 10px;color:#ccc;font-size:12px}
+.tool:hover{background:#333}
+.send{margin-left:auto;background:#f1f1f1;color:#080808;border:0;border-radius:10px;padding:9px 15px;font-weight:800}
+.send:disabled{opacity:.4;cursor:not-allowed}
+.disclaimer{text-align:center;color:#666;font-size:11px;margin-top:10px}
+.status{color:#aaa;font-size:12px;text-align:center;padding:8px}
+.file-name{font-size:11px;color:#aaa;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){.sidebar{width:68px;padding:14px 8px}.brand{padding:4px 4px 15px}.brand .brandtext,.nav .navtext,.sidebar-bottom{display:none}.logo{width:43px;height:43px}.newchat{font-size:0;padding:12px}.nav button{justify-content:center;padding:13px 5px;font-size:18px}.topbar{padding:0 12px}.content{padding:16px 12px}.suggestions{grid-template-columns:1fr}.composer-wrap{padding:8px 10px 13px}}
 </style>
 </head>
 <body>
 <div class="app">
-<aside class="sidebar" id="sidebar">
-  <div class="brand"><div class="logo">K</div><div><strong>KBAI</strong><small>KABENEVI AI STUDIO</small></div></div>
-  <button class="new" id="newChat">＋ New chat</button>
-  <div class="section-label">AI TOOLS</div>
-  <button class="tool active" data-mode="Chat">✧ AI Chat</button>
-  <button class="tool" data-mode="Study Assistant">▤ Study Assistant</button>
-  <button class="tool" data-mode="Writing Assistant">✎ Writing Assistant</button>
-  <button class="tool" data-mode="Image Creator">▧ Image Creator</button>
-  <button class="tool" data-mode="Image Understanding">◉ Image Understanding</button>
-  <button class="tool" data-mode="Voice Assistant">◖ Voice Assistant</button>
-  <button class="tool" data-mode="Web Search">⌕ Web Search</button>
-  <button class="tool" data-mode="Video Creator">▶ Video Creator</button>
-  <button class="tool" data-mode="File Assistant">▱ File Assistant</button>
-  <div class="sidebottom">
-    <div class="section-label">PERSONAL</div>
-    <button id="historyButton">◷ Chat history</button>
-    <button id="settingsButton">⚙ Settings</button>
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">K</div>
+    <div class="brandtext"><strong>KBAI</strong><small>KABENEVI AI</small></div>
   </div>
+  <button class="newchat" onclick="newChat()">＋ <span class="navtext">New chat</span></button>
+  <nav class="nav">
+    <button class="active" data-mode="chat" onclick="setMode('chat',this)">◈ <span class="navtext">AI Chat</span></button>
+    <button data-mode="study" onclick="setMode('study',this)">▤ <span class="navtext">Study assistant</span></button>
+    <button data-mode="writing" onclick="setMode('writing',this)">✎ <span class="navtext">Writing assistant</span></button>
+    <button data-mode="image" onclick="setMode('image',this)">▧ <span class="navtext">Image creator</span></button>
+    <button data-mode="vision" onclick="setMode('vision',this)">◉ <span class="navtext">Understand image</span></button>
+    <button data-mode="voice" onclick="setMode('voice',this)">♬ <span class="navtext">Voice assistant</span></button>
+    <button data-mode="file" onclick="setMode('file',this)">▱ <span class="navtext">File assistant</span></button>
+    <button data-mode="video" onclick="setMode('video',this)">▶ <span class="navtext">Video creator</span></button>
+    <button data-mode="search" onclick="setMode('search',this)">⌕ <span class="navtext">Web search</span></button>
+  </nav>
+  <div class="sidebar-bottom">KBAI · Built with ambition</div>
 </aside>
 
 <main class="main">
-<header class="top">
-  <div><button class="mobile-menu" id="menu">☰</button> <span id="modeTitle">Kabenevi AI</span></div>
-  <div class="status" id="status">● Ready</div>
-</header>
-<section class="content">
-  <div class="welcome" id="welcome">
-    <div class="mark">✦</div>
-    <h1>Meet your intelligence.</h1>
-    <p>Ask, learn, create and explore with Kabenevi AI.</p>
-  </div>
-  <div class="messages" id="messages"></div>
-  <div class="composer">
-    <img class="preview" id="preview" alt="Selected file preview">
-    <div class="tools">
-      <button class="small" id="upload">＋ Attach file</button>
-      <input id="fileInput" type="file" accept="image/*,.pdf,.txt,.md" hidden>
-      <button class="small" id="speak">🎙 Voice input</button>
-      <button class="small" id="read">🔊 Read replies: Off</button>
-      <button class="small" id="clear">Clear chat</button>
+  <header class="topbar">
+    <strong id="modeTitle">AI Chat</strong>
+    <div class="top-actions">
+      <button class="smallbtn" onclick="newChat()">＋ New</button>
+      <button class="smallbtn" onclick="toggleSpeech()" id="speechToggle">🔊 Voice on</button>
     </div>
-    <div class="entry">
-      <textarea id="prompt" rows="1" placeholder="Message Kabenevi AI..."></textarea>
-      <button class="send" id="send">Send ↑</button>
+  </header>
+
+  <section class="content" id="content">
+    <div class="welcome" id="welcome">
+      <div class="logo welcome-logo">K</div>
+      <h1>Meet your AI.</h1>
+      <p class="subtitle">Welcome to Kabenevi AI. What would you like to do today?</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="quick('Explain a difficult topic in simple words.')">▤ &nbsp; Help me learn something</button>
+        <button class="suggestion" onclick="quick('Help me write something professionally.')">✎ &nbsp; Help me write</button>
+        <button class="suggestion" onclick="setMode('image')">▧ &nbsp; Create an image</button>
+        <button class="suggestion" onclick="setMode('vision')">◉ &nbsp; Understand a picture</button>
+      </div>
     </div>
-    <div class="hint">KBAI can make mistakes. Check important information.</div>
+    <div class="messages" id="messages"></div>
+  </section>
+
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="composer-wrap">
+    <div class="composer">
+      <textarea id="prompt" placeholder="Message Kabenevi AI..." rows="2"></textarea>
+      <div class="tools">
+        <button class="tool" onclick="document.getElementById('upload').click()">＋ Upload</button>
+        <button class="tool" onclick="startVoice()">🎙 Voice input</button>
+        <span class="file-name" id="fileName"></span>
+        <input id="upload" type="file" hidden accept="image/*,.txt" onchange="handleFile(this.files[0])">
+        <button class="send" id="send" onclick="sendMessage()">Send ↑</button>
+      </div>
+    </div>
+    <div class="disclaimer">KBAI can make mistakes. Check important information.</div>
   </div>
-</section>
 </main>
 </div>
+
 <script>
 const API="https://kabenevi-ai.nevillaberyl.workers.dev";
-const $=s=>document.querySelector(s);
-const messages=$("#messages"),promptBox=$("#prompt"),statusBox=$("#status");
-let mode="Chat",history=[],file=null,readReplies=false,busy=false;
+let mode="chat",history=[],selectedFile=null,speechOn=true;
+const $=id=>document.getElementById(id);
 
-function addMessage(text,who="bot",image=null){
- const el=document.createElement("div");
- el.className="msg "+who;
- el.textContent=text;
- if(image){const img=document.createElement("img");img.src=image;img.alt="Generated image";el.appendChild(img)}
- messages.appendChild(el);
- messages.scrollTop=messages.scrollHeight;
- $("#welcome").style.display="none";
- return el;
+function setStatus(text){$("status").textContent=text}
+function setMode(next,button){
+  mode=next;
+  const names={chat:"AI Chat",study:"Study Assistant",writing:"Writing Assistant",image:"Image Creator",vision:"Image Understanding",voice:"Voice Assistant",file:"File Assistant",video:"Video Creator",search:"Web Search"};
+  $("modeTitle").textContent=names[next];
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.mode===next));
+  const hints={chat:"Message Kabenevi AI...",study:"What would you like to learn?",writing:"What would you like to write?",image:"Describe the image you want to create...",vision:"Upload an image and ask a question...",voice:"Type a message or use voice input...",file:"Ask a question about your TXT document...",video:"Video generation is not connected yet.",search:"Web search is not connected yet."};
+  $("prompt").placeholder=hints[next]||"Message Kabenevi AI...";
+  setStatus(next==="video"?"Video generation needs a video provider connection.":next==="search"?"Web search needs a search provider connection.":"");
+  if(next==="image")$("upload").accept="image/*";
+  else if(next==="vision")$("upload").accept="image/*";
+  else if(next==="file")$("upload").accept=".txt,text/plain";
+  else $("upload").accept="image/*,.txt";
 }
-function setStatus(t){statusBox.textContent="● "+t}
-function selectMode(next){
- mode=next;$("#modeTitle").textContent="Kabenevi "+next;
- document.querySelectorAll(".tool").forEach(b=>b.classList.toggle("active",b.dataset.mode===next));
- const hints={
- "Chat":"Message Kabenevi AI...",
- "Study Assistant":"Ask a study question...",
- "Writing Assistant":"What would you like to write?",
- "Image Creator":"Describe the image you want to create...",
- "Image Understanding":"Upload a picture and ask about it...",
- "Voice Assistant":"Type a message or use voice input...",
- "Web Search":"What would you like to search for?",
- "Video Creator":"Describe the video you want to create...",
- "File Assistant":"Ask a question about your uploaded file..."
- };
- promptBox.placeholder=hints[next]||"Message Kabenevi AI...";
- $("#sidebar").classList.remove("open");
+function newChat(){history=[];$("messages").innerHTML="";$("welcome").style.display="block";setStatus("");$("prompt").value=""}
+function quick(text){$("prompt").value=text;$("prompt").focus()}
+function addMessage(role,text,image){
+  $("welcome").style.display="none";
+  const item=document.createElement("div");item.className="message "+role;
+  const avatar=document.createElement("div");avatar.className="avatar";avatar.textContent=role==="user"?"Y":"K";
+  const bubble=document.createElement("div");bubble.className="bubble";bubble.textContent=text;
+  if(image){const img=document.createElement("img");img.src=image;img.alt="Generated image";bubble.appendChild(img)}
+  item.append(avatar,bubble);$("messages").appendChild(item);
+  $("content").scrollTop=$("content").scrollHeight;
+  return bubble;
 }
-document.querySelectorAll(".tool").forEach(b=>b.onclick=()=>selectMode(b.dataset.mode));
-$("#menu").onclick=()=>$("#sidebar").classList.toggle("open");
-$("#newChat").onclick=()=>{messages.innerHTML="";history=[];file=null;$("#preview").style.display="none";$("#welcome").style.display="block";setStatus("Ready")};
-$("#clear").onclick=()=>{messages.innerHTML="";history=[];$("#welcome").style.display="block";setStatus("Ready")};
-
-$("#upload").onclick=()=>$("#fileInput").click();
-$("#fileInput").onchange=async e=>{
- file=e.target.files[0];if(!file)return;
- if(file.size>8*1024*1024){addMessage("Please choose a file smaller than 8 MB.");file=null;return}
- const img=$("#preview");
- if(file.type.startsWith("image/")){img.src=URL.createObjectURL(file);img.style.display="block"}
- else{img.style.display="none";addMessage("Selected file: "+file.name+". File reading will be connected in the next backend upgrade.")}
-};
-
-function toBase64(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(",")[1]);r.onerror=reject;r.readAsDataURL(f)})}
-
-async function post(path,body){
- const res=await fetch(API+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
- const data=await res.json().catch(()=>({}));
- if(!res.ok)throw new Error(data.error||data.message||"Service error "+res.status);
- return data;
+async function post(path,data){
+  const response=await fetch(API+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+  const result=await response.json().catch(()=>({error:"The server returned an unreadable response."}));
+  if(!response.ok)throw new Error(result.error||"Request failed ("+response.status+")");
+  return result;
 }
-async function send(){
- const text=promptBox.value.trim();
- if(!text||busy)return;
- busy=true;$("#send").disabled=true;addMessage(text,"user");promptBox.value="";
- setStatus("Working...");
- try{
-  let data;
-  if(mode==="Image Creator"){
-    data=await post("/image",{prompt:text});
-    const image=data.image||data.url;
-    if(!image)throw new Error("The image service did not return an image.");
-    addMessage("Your image is ready.","bot",image);
-  }else if(mode==="Image Understanding"){
-    if(!file||!file.type.startsWith("image/"))throw new Error("Please attach an image first.");
-    data=await post("/vision",{prompt:text,image:await toBase64(file),mimeType:file.type});
-    addMessage(data.reply||data.description||"No description was returned.");
-  }else if(mode==="Web Search"){
-    data=await post("/search",{query:text});
-    addMessage(data.reply||data.results||"No search results returned.");
-  }else if(mode==="Video Creator"){
-    data=await post("/video",{prompt:text});
-    addMessage(data.message||data.status||"Video request submitted.");
-    if(data.url)addMessage("Video link: "+data.url);
-  }else if(mode==="File Assistant"){
-    if(!file)throw new Error("Please attach a supported file first.");
-    data=await post("/document",{question:text,fileName:file.name,mimeType:file.type,content:await toBase64(file)});
-    addMessage(data.reply||"No document response returned.");
-  }else{
-    let message=text;
-    if(mode==="Study Assistant")message="You are a helpful study tutor. Explain step by step in clear language. "+text;
-    if(mode==="Writing Assistant")message="You are a writing assistant. Help improve and draft writing. "+text;
-    history.push({role:"user",content:message});
-    data=await post("/chat",{messages:history});
-    const reply=data.reply||data.response||"I did not receive a reply.";
-    history.push({role:"assistant",content:reply});
-    addMessage(reply);
-    if(readReplies&&"speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(reply))}
-  }
-  setStatus("Ready");
- }catch(err){addMessage("I couldn't complete that request: "+err.message+". The required backend service may not be connected yet.");setStatus("Connection issue")}
- finally{busy=false;$("#send").disabled=false;file=null;$("#fileInput").value="";$("#preview").style.display="none"}
+async function sendMessage(){
+  const text=$("prompt").value.trim();
+  if(!text&&!selectedFile)return;
+  $("prompt").value="";
+  $("send").disabled=true;setStatus("KBAI is working...");
+  try{
+    if(mode==="video"||mode==="search")throw new Error(mode==="video"?"Video generation is not connected yet.":"Web search is not connected yet.");
+    if(mode==="image"){
+      if(!text)throw new Error("Describe the image you want.");
+      addMessage("user",text);
+      const result=await post("/image",{prompt:text});
+      addMessage("assistant","Your image is ready.",result.image);
+    }else if(mode==="vision"){
+      if(!selectedFile)throw new Error("Upload an image first.");
+      const data=await fileBase64(selectedFile);
+      addMessage("user",text||"Please describe this image.");
+      const result=await post("/vision",{prompt:text||"Describe this image.",image:data,mimeType:selectedFile.type||"image/jpeg"});
+      addMessage("assistant",result.reply||"No answer received.");
+    }else if(mode==="file"){
+      if(!selectedFile)throw new Error("Upload a TXT document first.");
+      const data=await fileBase64(selectedFile);
+      addMessage("user",text||"Summarise this document.");
+      const result=await post("/document",{question:text||"Summarise this document.",fileName:selectedFile.name,mimeType:selectedFile.type||"text/plain",content:data});
+      addMessage("assistant",result.reply||"No answer received.");
+    }else{
+      const question=(mode==="study"?"Help me learn. Explain simply: ":mode==="writing"?"Help me with this writing task: ":"")+text;
+      if(!text)throw new Error("Type a message first.");
+      addMessage("user",text);
+      history.push({role:"user",content:question});
+      const result=await post("/chat",{messages:history});
+      const reply=result.reply||"I couldn't generate a response.";
+      history.push({role:"assistant",content:reply});
+      addMessage("assistant",reply);
+      if(speechOn&&mode==="voice"&&"speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(reply))}
+    }
+    selectedFile=null;$("fileName").textContent="";
+    setStatus("");
+  }catch(error){addMessage("assistant","Sorry, something went wrong: "+error.message);setStatus("Please check the connection and try again.")}
+  finally{$("send").disabled=false}
 }
-$("#send").onclick=send;
-promptBox.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
-$("#read").onclick=()=>{readReplies=!readReplies;$("#read").textContent="🔊 Read replies: "+(readReplies?"On":"Off");if(!readReplies&&"speechSynthesis"in window)speechSynthesis.cancel()};
-$("#speak").onclick=()=>{
- const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR){addMessage("Voice input is not supported in this browser.");return}
- const rec=new SR();rec.lang="en-US";rec.onstart=()=>setStatus("Listening...");
- rec.onresult=e=>{promptBox.value=e.results[0][0].transcript;setStatus("Ready")};
- rec.onerror=()=>setStatus("Voice unavailable");rec.onend=()=>setStatus("Ready");rec.start();
-};
-$("#historyButton").onclick=()=>addMessage("This browser session keeps the current conversation. Permanent synced accounts and cloud history are a later upgrade.");
-$("#settingsButton").onclick=()=>addMessage("Settings and account preferences will be added in a later upgrade.");
+function fileBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("Could not read that file."));reader.readAsDataURL(file)})}
+function handleFile(file){
+  if(!file)return;
+  if(file.size>5*1024*1024){setStatus("Please choose a file smaller than 5 MB.");return}
+  if(mode==="file"&&!file.name.toLowerCase().endsWith(".txt")){setStatus("The current document reader supports TXT files only.");return}
+  if(mode==="vision"&&!file.type.startsWith("image/")){setStatus("Please choose an image.");return}
+  selectedFile=file;$("fileName").textContent="Attached: "+file.name;setStatus("File ready to use.");
+}
+function startVoice(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){setStatus("Voice input is not supported in this browser. Try Chrome.");return}
+  const recognition=new SpeechRecognition();recognition.lang="en-US";recognition.interimResults=false;
+  recognition.onstart=()=>setStatus("Listening...");
+  recognition.onresult=e=>{$("prompt").value=e.results[0][0].transcript;setStatus("Voice captured. Press Send.")};
+  recognition.onerror=()=>setStatus("Voice input could not start. Check microphone permission.");
+  recognition.onend=()=>{if($("status").textContent==="Listening...")setStatus("")};
+  recognition.start();
+}
+function toggleSpeech(){speechOn=!speechOn;$("speechToggle").textContent=speechOn?"🔊 Voice on":"🔇 Voice off";if(!speechOn&&"speechSynthesis"in window)speechSynthesis.cancel()}
+$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
 </script>
 </body>
 </html>
