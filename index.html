@@ -1,1689 +1,229 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#050505">
-<title>KBAI — Smarter. Faster. Better.</title>
-
-<style>
-:root {
-  color-scheme: dark;
-  --bg: #050505;
-  --panel: #0b0b0b;
-  --line: #303030;
-  --text: #f7f7f7;
-  --muted: #aaa;
-  --green: #10c86a;
-  --gold: #f4c52e;
-  --sidebar: 292px;
-}
-
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Inter, system-ui, Arial, sans-serif;
-}
-
-body { overflow: hidden; }
-
-button, input, textarea { font: inherit; }
-button { color: inherit; cursor: pointer; }
-
-.app {
-  height: 100dvh;
-  min-height: 540px;
-  display: flex;
-  background: radial-gradient(
-    ellipse at 70% 65%,
-    #111 0%, #070707 42%, #030303 78%
-  );
-}
-
-/* SIDEBAR */
-
-.sidebar {
-  width: var(--sidebar);
-  flex: 0 0 var(--sidebar);
-  height: 100%;
-  padding: 24px 17px 16px;
-  background: rgba(5,5,5,.97);
-  border-right: 1px solid #292929;
-  display: flex;
-  flex-direction: column;
-  z-index: 5;
-}
-
-.brand {
-  height: 250px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  text-align: center;
-  padding-bottom: 15px;
-}
-
-.brand-mark {
-  height: 144px;
-  width: 205px;
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.brand-k {
-  font-family: Georgia, serif;
-  font-weight: 900;
-  font-style: italic;
-  font-size: 132px;
-  line-height: 1;
-  letter-spacing: -15px;
-  transform: skew(-12deg);
-  text-shadow: 0 0 18px #fff2;
-}
-
-.brand-orbit {
-  position: absolute;
-  width: 205px;
-  height: 64px;
-  border: 7px solid white;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-radius: 50%;
-  transform: rotate(-27deg);
-  top: 60px;
-  left: 0;
-}
-
-.crown {
-  position: absolute;
-  top: 0;
-  left: 71px;
-  font-size: 52px;
-  line-height: 1;
-  filter: grayscale(1);
-}
-
-.brand-name {
-  font-weight: 900;
-  letter-spacing: 7px;
-  font-size: 43px;
-  line-height: 1.1;
-  margin-top: -2px;
-}
-
-.brand-tag {
-  font-style: italic;
-  font-size: 18px;
-  color: #e6e6e6;
-  margin-top: 5px;
-}
-
-.nav {
-  display: grid;
-  gap: 7px;
-  margin-top: 16px;
-}
-
-.nav-btn {
-  width: 100%;
-  height: 51px;
-  border: 1px solid transparent;
-  border-radius: 16px;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 0 18px;
-  text-align: left;
-  font-size: 18px;
-  color: #eee;
-  transition: .18s;
-}
-
-.nav-btn .ico {
-  width: 26px;
-  text-align: center;
-  font-size: 25px;
-}
-
-.nav-btn:hover,
-.nav-btn.active {
-  background: linear-gradient(110deg,#242424,#1d1d1d);
-  border-color: #292929;
-  color: white;
-}
-
-.sidebar-status {
-  margin-top: auto;
-  border: 1px solid #373737;
-  border-radius: 18px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: linear-gradient(120deg,#141414,#090909);
-  box-shadow: 0 8px 24px #0008;
-}
-
-.online-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 14px #10c86a66;
-  flex: none;
-}
-
-.sidebar-status strong {
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.sidebar-status small {
-  display: block;
-  color: #ddd;
-  margin-top: 3px;
-  font-size: 13px;
-}
-
-.status-bolt {
-  margin-left: auto;
-  color: var(--gold);
-  font-size: 29px;
-}
-
-.sidebar-foot {
-  text-align: center;
-  color: #ddd;
-  font-size: 18px;
-  font-style: italic;
-  line-height: 1.35;
-  margin: 23px 0 0;
-}
-
-.sidebar-foot:after {
-  content: "";
-  display: block;
-  width: 115px;
-  height: 2px;
-  background: #ddd;
-  transform: rotate(-13deg);
-  margin: 13px auto 0;
-}
-
-/* MAIN AREA */
-
-.main {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-.topbar {
-  height: 100px;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 30px 0 28px;
-  z-index: 2;
-}
-
-.status-pill {
-  height: 57px;
-  border: 1px solid #343434;
-  border-radius: 30px;
-  background: #080808aa;
-  display: flex;
-  align-items: center;
-  padding: 0 22px;
-  gap: 12px;
-  font-size: 16px;
-  color: #eee;
-}
-
-.status-pill .bolt {
-  font-size: 25px;
-  color: var(--green);
-}
-
-.status-pill .separator {
-  height: 23px;
-  width: 1px;
-  background: #555;
-  margin: 0 12px;
-}
-
-.top-actions {
-  display: flex;
-  align-items: center;
-  gap: 17px;
-}
-
-.icon-btn {
-  width: 43px;
-  height: 43px;
-  border: 0;
-  background: transparent;
-  border-radius: 50%;
-  font-size: 27px;
-  display: grid;
-  place-items: center;
-  color: white;
-}
-
-.icon-btn:hover { background: #222; }
-
-.profile {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.profile-circle {
-  width: 53px;
-  height: 53px;
-  border-radius: 50%;
-  background: #202020;
-  border: 1px solid #383838;
-  display: grid;
-  place-items: center;
-  font-size: 25px;
-  font-weight: 600;
-}
-
-.profile-menu {
-  border: 0;
-  background: transparent;
-  color: white;
-  font-size: 20px;
-}
-
-/* HOME SCREEN */
-
-.content {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 0 28px 15px;
-  scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
-}
-
-.home-screen {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.hero {
-  width: min(100%,1000px);
-  text-align: center;
-  padding-top: 0;
-  margin: auto auto 42px;
-}
-
-.hero-logo {
-  height: 245px;
-  width: min(100%,690px);
-  margin: 0 auto 20px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-}
-
-.hero-symbol {
-  width: 300px;
-  height: 220px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-
-.hero-symbol .brand-k {
-  font-size: 220px;
-  letter-spacing: -25px;
-}
-
-.hero-symbol .brand-orbit {
-  width: 310px;
-  height: 90px;
-  border-width: 11px;
-  top: 93px;
-  left: -5px;
-}
-
-.hero-symbol .crown {
-  font-size: 82px;
-  left: 105px;
-  top: -2px;
-}
-
-.hero-wording {
-  text-align: left;
-  padding-top: 32px;
-}
-
-.hero-wording strong {
-  font-size: clamp(50px,6vw,100px);
-  font-weight: 900;
-  letter-spacing: 2px;
-  line-height: .98;
-}
-
-.hero-wording em {
-  font-size: clamp(18px,2vw,31px);
-  font-weight: 600;
-  display: block;
-  white-space: nowrap;
-  margin-top: 12px;
-}
-
-.hero-underline {
-  height: 4px;
-  width: 95%;
-  margin: 12px auto 0;
-  border-radius: 50%;
-  background: #eee;
-  transform: rotate(-4deg);
-  opacity: .9;
-}
-
-.greeting {
-  font-size: clamp(32px,4vw,58px);
-  font-weight: 750;
-  letter-spacing: -1.5px;
-  margin: 0 0 10px;
-}
-
-.greeting span { white-space: nowrap; }
-
-.subgreeting {
-  font-size: clamp(20px,2.5vw,36px);
-  color: #c5c5c5;
-  margin: 0;
-}
-
-/* FEATURE CARDS */
-
-.feature-grid {
-  width: min(100%,1170px);
-  display: grid;
-  grid-template-columns: repeat(5,minmax(0,1fr));
-  gap: 17px;
-  margin: 0 auto 27px;
-}
-
-.feature-card {
-  height: 177px;
-  border: 1px solid #494949;
-  border-radius: 24px;
-  background: linear-gradient(145deg,#191919e8,#0d0d0de8);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 15px 9px;
-  transition: .18s;
-  box-shadow: 0 12px 30px #0005;
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
-  border-color: #777;
-  background: linear-gradient(145deg,#252525,#111);
-}
-
-.feature-icon {
-  font-size: 47px;
-  line-height: 1;
-  margin-bottom: 13px;
-  filter: grayscale(1);
-}
-
-.feature-card strong {
-  font-size: clamp(15px,1.45vw,23px);
-  margin-bottom: 5px;
-}
-
-.feature-card small {
-  font-size: clamp(12px,1.2vw,18px);
-  line-height: 1.4;
-  color: #ddd;
-}
-
-/* MESSAGE BOX */
-
-.composer-wrap {
-  flex: none;
-  padding: 0 28px 24px;
-  background: linear-gradient(transparent,#050505 20%);
-}
-
-.composer {
-  width: min(100%,1190px);
-  min-height: 94px;
-  margin: 0 auto;
-  border: 1px solid #555;
-  border-radius: 27px;
-  background: rgba(5,5,5,.94);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 15px 12px 27px;
-  box-shadow: 0 8px 32px #0008;
-}
-
-.sparkle {
-  font-size: 28px;
-  color: #fff;
-  flex: none;
-}
-
-#prompt {
-  flex: 1;
-  min-width: 0;
-  min-height: 48px;
-  max-height: 145px;
-  resize: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: white;
-  font-size: 21px;
-  padding: 12px 0;
-  line-height: 1.35;
-}
-
-#prompt::placeholder { color: #999; }
-
-.attach-btn {
-  width: 43px;
-  height: 43px;
-  border: 0;
-  background: transparent;
-  font-size: 27px;
-  transform: rotate(-25deg);
-  color: #eee;
-}
-
-.send-btn {
-  width: 66px;
-  height: 66px;
-  border: 0;
-  border-radius: 50%;
-  background: #fff;
-  color: #050505;
-  font-size: 30px;
-  display: grid;
-  place-items: center;
-  transition: .15s;
-}
-
-.send-btn:hover { transform: scale(1.05); }
-
-.send-btn:disabled {
-  opacity: .5;
-  cursor: wait;
-}
-
-/* QUICK TIPS */
-
-.quick-tips {
-  width: min(100%,1000px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin: 20px auto 0;
-}
-
-.tip {
-  height: 62px;
-  border: 1px solid #363636;
-  border-radius: 35px;
-  background: #090909;
-  color: #eee;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  white-space: nowrap;
-}
-
-.tip:hover { background: #202020; }
-.tip b { font-size: 21px; }
-
-/* CHAT MESSAGES */
-
-.messages-screen {
-  width: min(100%,900px);
-  margin: 15px auto 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.message {
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-  line-height: 1.65;
-  font-size: 17px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.message.user { justify-content: flex-end; }
-
-.avatar {
-  width: 38px;
-  height: 38px;
-  flex: none;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #eee;
-  color: #080808;
-  font-weight: 900;
-}
-
-.message.user .avatar {
-  background: #242424;
-  color: white;
-  order: 2;
-}
-
-.bubble {
-  max-width: 82%;
-  padding: 13px 17px;
-  border: 1px solid #303030;
-  border-radius: 17px;
-  background: #111;
-}
-
-.message.user .bubble { background: #202020; }
-
-.bubble img {
-  display: block;
-  max-width: min(100%,560px);
-  border-radius: 12px;
-  margin-top: 10px;
-}
-
-.status-line {
-  text-align: center;
-  min-height: 20px;
-  color: #aaa;
-  font-size: 13px;
-  padding: 0 12px 7px;
-}
-
-.file-chip {
-  font-size: 13px;
-  color: #ddd;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hidden { display: none !important; }
-
-/* OTHER PAGES */
-
-.panel-screen {
-  width: min(100%,850px);
-  margin: 45px auto;
-  padding: 30px;
-  border: 1px solid #333;
-  border-radius: 22px;
-  background: #101010;
-}
-
-.panel-screen h2 {
-  font-size: 30px;
-  margin: 0 0 10px;
-}
-
-.panel-screen p {
-  color: #bbb;
-  line-height: 1.6;
-}
-
-.panel-screen button {
-  border: 1px solid #444;
-  border-radius: 12px;
-  background: #202020;
-  padding: 12px 16px;
-  margin: 8px 8px 0 0;
-}
-
-.mobile-menu { display: none; }
-
-/* LIGHT MODE */
-
-.light-mode { color-scheme: light; }
-
-.light-mode .app {
-  background: #eee;
-  color: #111;
-}
-
-.light-mode .sidebar {
-  background: #f8f8f8;
-  border-color: #ddd;
-}
-
-.light-mode .nav-btn { color: #222; }
-
-.light-mode .nav-btn.active,
-.light-mode .nav-btn:hover {
-  background: #ddd;
-  color: #111;
-}
-
-.light-mode .sidebar-status,
-.light-mode .composer,
-.light-mode .status-pill,
-.light-mode .tip,
-.light-mode .feature-card {
-  background: #fff;
-  color: #111;
-  border-color: #ccc;
-}
-
-.light-mode .brand-tag,
-.light-mode .sidebar-foot,
-.light-mode .subgreeting { color: #333; }
-
-.light-mode #prompt { color: #111; }
-
-.light-mode .topbar,
-.light-mode .icon-btn,
-.light-mode .profile-menu { color: #111; }
-
-.light-mode .panel-screen,
-.light-mode .bubble {
-  background: #fff;
-  color: #111;
-}
-
-/* RESPONSIVE DESIGN */
-
-@media(max-width:1150px) {
-  :root { --sidebar:245px; }
-
-  .brand { height:220px; }
-  .brand-mark { transform:scale(.86); }
-  .brand-name { font-size:36px; }
-
-  .feature-grid { gap:10px; }
-  .feature-card {
-    height:160px;
-    border-radius:18px;
-  }
-
-  .hero-logo {
-    transform:scale(.9);
-    margin-bottom:0;
-  }
-}
-
-@media(max-width:850px) {
-  :root { --sidebar:78px; }
-
-  .sidebar { padding:18px 9px 12px; }
-
-  .brand {
-    height:105px;
-    padding:0;
-  }
-
-  .brand-mark {
-    width:60px;
-    height:60px;
-    transform:scale(.35);
-    transform-origin:center;
-  }
-
-  .brand-name,
-  .brand-tag,
-  .nav-label,
-  .sidebar-status strong,
-  .sidebar-status small,
-  .status-bolt,
-  .sidebar-foot {
-    display:none;
-  }
-
-  .nav {
-    margin-top:20px;
-    gap:9px;
-  }
-
-  .nav-btn {
-    height:49px;
-    justify-content:center;
-    padding:0;
-    border-radius:13px;
-  }
-
-  .nav-btn .ico { font-size:23px; }
-
-  .sidebar-status {
-    justify-content:center;
-    padding:12px 0;
-    border:0;
-    background:transparent;
-  }
-
-  .topbar {
-    height:75px;
-    padding:0 15px;
-  }
-
-  .content { padding:0 14px 14px; }
-
-  .hero {
-    padding-top:22px;
-    margin-bottom:28px;
-  }
-
-  .hero-logo {
-    height:170px;
-    transform:scale(.72);
-    transform-origin:center top;
-    margin-bottom:-38px;
-  }
-
-  .feature-grid {
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    max-width:600px;
-  }
-
-  .feature-card { height:145px; }
-
-  .feature-card:last-child {
-    grid-column:1/-1;
-  }
-
-  .composer-wrap { padding:0 14px 14px; }
-
-  .composer {
-    min-height:76px;
-    border-radius:22px;
-    padding:9px 10px 9px 16px;
-  }
-
-  #prompt { font-size:16px; }
-
-  .send-btn {
-    width:53px;
-    height:53px;
-    font-size:24px;
-  }
-
-  .quick-tips {
-    gap:8px;
-    margin-top:12px;
-  }
-
-  .tip {
-    height:45px;
-    font-size:12px;
-    padding:0 13px;
-  }
-}
-
-@media(max-width:520px) {
-  .status-pill {
-    height:42px;
-    padding:0 12px;
-    font-size:12px;
-    gap:7px;
-  }
-
-  .status-pill .bolt { font-size:18px; }
-  .status-pill .separator {
-    margin:0 3px;
-    height:18px;
-  }
-
-  .top-actions { gap:4px; }
-
-  .icon-btn {
-    width:36px;
-    height:36px;
-    font-size:22px;
-  }
-
-  .profile-circle {
-    width:38px;
-    height:38px;
-    font-size:18px;
-  }
-
-  .hero-logo {
-    transform:scale(.52);
-    margin-left:-80px;
-    margin-right:-80px;
-    margin-bottom:-78px;
-  }
-
-  .greeting { font-size:29px; }
-  .subgreeting { font-size:18px; }
-
-  .feature-grid { gap:9px; }
-
-  .feature-card {
-    height:130px;
-    padding:10px 5px;
-  }
-
-  .feature-icon {
-    font-size:34px;
-    margin-bottom:8px;
-  }
-
-  .feature-card strong { font-size:14px; }
-  .feature-card small { font-size:11px; }
-
-  .quick-tips .tip:nth-child(n+4) { display:none; }
-
-  .composer-wrap { padding-bottom:10px; }
-  .composer { gap:8px; }
-  .sparkle { font-size:22px; }
-
-  .attach-btn {
-    width:30px;
-    font-size:23px;
-  }
-
-  .send-btn {
-    width:46px;
-    height:46px;
-  }
-}
-</style>
-</head>
-
-<body>
-<div class="app">
-
-<aside class="sidebar">
-
-  <div class="brand">
-    <div class="brand-mark">
-      <span class="crown">♛</span>
-      <span class="brand-k">K</span>
-      <span class="brand-orbit"></span>
-    </div>
-
-    <div class="brand-name">KBAI</div>
-    <div class="brand-tag">Smarter. Faster. Better.</div>
-  </div>
-
-  <nav class="nav" aria-label="Main navigation">
-
-    <button class="nav-btn active" data-page="home" onclick="showPage('home',this)">
-      <span class="ico">⌂</span>
-      <span class="nav-label">Home</span>
-    </button>
-
-    <button class="nav-btn" data-page="chat" onclick="showPage('chat',this)">
-      <span class="ico">▢</span>
-      <span class="nav-label">AI Chat</span>
-    </button>
-
-    <button class="nav-btn" data-page="study" onclick="showPage('study',this)">
-      <span class="ico">◆</span>
-      <span class="nav-label">Study</span>
-    </button>
-
-    <button class="nav-btn" data-page="writing" onclick="showPage('writing',this)">
-      <span class="ico">✎</span>
-      <span class="nav-label">Writing</span>
-    </button>
-
-    <button class="nav-btn" data-page="image" onclick="showPage('image',this)">
-      <span class="ico">▧</span>
-      <span class="nav-label">Image Creator</span>
-    </button>
-
-    <button class="nav-btn" data-page="file" onclick="showPage('file',this)">
-      <span class="ico">▰</span>
-      <span class="nav-label">File Assistant</span>
-    </button>
-
-    <button class="nav-btn" data-page="history" onclick="showPage('history',this)">
-      <span class="ico">◷</span>
-      <span class="nav-label">Chat History</span>
-    </button>
-
-    <button class="nav-btn" data-page="settings" onclick="showPage('settings',this)">
-      <span class="ico">⚙</span>
-      <span class="nav-label">Settings</span>
-    </button>
-
-    <button class="nav-btn" data-page="help" onclick="showPage('help',this)">
-      <span class="ico">ⓘ</span>
-      <span class="nav-label">Help &amp; Info</span>
-    </button>
-
-  </nav>
-
-  <div class="sidebar-status">
-    <span class="online-dot"></span>
-    <div>
-      <strong>Online</strong>
-      <small>KBAI is ready!</small>
-    </div>
-    <span class="status-bolt">ϟ</span>
-  </div>
-
-  <div class="sidebar-foot">
-    Your Ultimate<br>AI Companion
-  </div>
-
-</aside>
-
-<main class="main">
-
-  <header class="topbar">
-
-    <div class="status-pill">
-      <span class="bolt">ϟ</span>
-      <span>Fast Response</span>
-      <span class="separator"></span>
-      <span class="online-dot"></span>
-      <span>Online</span>
-    </div>
-
-    <div class="top-actions">
-
-      <button class="icon-btn"
-        title="Toggle light/dark theme"
-        onclick="toggleTheme()">☾</button>
-
-      <button class="icon-btn"
-        title="Toggle full screen"
-        onclick="toggleFullscreen()">⛶</button>
-
-      <div class="profile">
-        <div class="profile-circle">N</div>
-        <button class="profile-menu" title="Profile">⌄</button>
-      </div>
-
-      <button class="icon-btn mobile-menu"
-        title="Home"
-        onclick="showPage('home')">☰</button>
-
-    </div>
-  </header>
-
-  <section class="content" id="content">
-
-    <div class="home-screen" id="homeScreen">
-
-      <section class="hero">
-
-        <div class="hero-logo">
-
-          <div class="hero-symbol">
-            <span class="crown">♛</span>
-            <span class="brand-k">K</span>
-            <span class="brand-orbit"></span>
-          </div>
-
-          <div class="hero-wording">
-            <strong>KBAI</strong>
-            <em>Smarter. Faster. Better.</em>
-          </div>
-
-        </div>
-
-        <div class="hero-underline"></div>
-
-        <h1 class="greeting">
-          Hello Nevilla Beryl <span>👋</span>
-        </h1>
-
-        <p class="subgreeting">
-          What would you like to do today?
-        </p>
-
-      </section>
-
-      <section class="feature-grid">
-
-        <button class="feature-card" onclick="showPage('chat')">
-          <span class="feature-icon">▣</span>
-          <strong>AI Chat</strong>
-          <small>Chat with KBAI</small>
-        </button>
-
-        <button class="feature-card" onclick="showPage('study')">
-          <span class="feature-icon">◆</span>
-          <strong>Study</strong>
-          <small>Get help with<br>studies</small>
-        </button>
-
-        <button class="feature-card" onclick="showPage('writing')">
-          <span class="feature-icon">✎</span>
-          <strong>Writing</strong>
-          <small>Write anything</small>
-        </button>
-
-        <button class="feature-card" onclick="showPage('image')">
-          <span class="feature-icon">▧</span>
-          <strong>Image Creator</strong>
-          <small>Generate images</small>
-        </button>
-
-        <button class="feature-card" onclick="showPage('file')">
-          <span class="feature-icon">▰</span>
-          <strong>File Assistant</strong>
-          <small>Work with files</small>
-        </button>
-
-      </section>
-    </div>
-
-    <div class="messages-screen hidden" id="messages"></div>
-    <div class="panel-screen hidden" id="panel"></div>
-
-  </section>
-
-  <div class="status-line" id="status" aria-live="polite"></div>
-
-  <footer class="composer-wrap" id="composerWrap">
-
-    <div class="composer">
-
-      <span class="sparkle">✦</span>
-
-      <textarea
-        id="prompt"
-        rows="1"
-        placeholder="Type your message here..."
-        aria-label="Message KBAI">
-      </textarea>
-
-      <input
-        id="upload"
-        type="file"
-        hidden
-        accept="image/*,.txt,.pdf,.doc,.docx">
-
-      <span class="file-chip" id="fileName"></span>
-
-      <button class="attach-btn"
-        title="Attach a file"
-        onclick="document.getElementById('upload').click()">♧</button>
-
-      <button class="send-btn"
-        id="send"
-        title="Send message"
-        onclick="sendMessage()">➤</button>
-
-    </div>
-
-    <div class="quick-tips">
-
-      <button class="tip" onclick="quick('Give me useful tips for today.')">
-        <b>ϟ</b><strong>Quick Tips:</strong>
-      </button>
-
-      <button class="tip" onclick="quick('Answer this question clearly: ')">
-        <b>💡</b>Ask a question
-      </button>
-
-      <button class="tip" onclick="showPage('study')">
-        <b>📖</b>Get study help
-      </button>
-
-      <button class="tip" onclick="showPage('writing')">
-        <b>✎</b>Write an essay
-      </button>
-
-      <button class="tip" onclick="showPage('image')">
-        <b>▧</b>Create an image
-      </button>
-
-    </div>
-  </footer>
-
-</main>
-</div>
-
-<script>
-
-const API = "https://kabenevi-ai.nevillaberyl.workers.dev";
-
-let mode = "chat";
-let history = [];
-let selectedFile = null;
-let activePage = "home";
-
-const $ = id => document.getElementById(id);
-
-function setStatus(s) {
-  $("status").textContent = s;
-}
-
-function setPageActive(page) {
-  document.querySelectorAll(".nav-btn").forEach(b =>
-    b.classList.toggle("active",b.dataset.page===page)
-  );
-}
-
-function showPage(page,button) {
-
-  activePage = page;
-  setPageActive(page);
-
-  $("homeScreen").classList.toggle("hidden",page!=="home");
-
-  $("messages").classList.toggle(
-    "hidden",
-    !["chat","study","writing","image","file"].includes(page)
-  );
-
-  $("panel").classList.toggle(
-    "hidden",
-    !["history","settings","help"].includes(page)
-  );
-
-  $("composerWrap").classList.toggle(
-    "hidden",
-    ["history","settings","help"].includes(page)
-  );
-
-  if(["chat","study","writing","image","file"].includes(page)) {
-
-    mode = page;
-
-    const hints = {
-      chat:"Type your message here...",
-      study:"What would you like help studying?",
-      writing:"What would you like to write?",
-      image:"Describe the image you want to create...",
-      file:"Attach a document and ask a question..."
-    };
-
-    $("prompt").placeholder = hints[page];
-    $("prompt").focus();
-
-    if(page==="image") {
-      $("upload").accept = "image/*";
-    } else if(page==="file") {
-      $("upload").accept = ".txt,text/plain";
-    } else {
-      $("upload").accept = "image/*,.txt,.pdf,.doc,.docx";
+const ALLOWED_ORIGINS = [
+  "https://nevillaberyl-alt.github.io",
+  "http://localhost:5500"
+];
+
+const CHAT_MODEL = "@cf/zai-org/glm-4.7-flash";
+const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
+const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+
+function corsHeaders(origin) {
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin)
+    ? origin
+    : ALLOWED_ORIGINS[0];
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Vary": "Origin"
+  };
+}
+
+function json(data, status, origin) {
+  return new Response(JSON.stringify(data), {
+    status: status || 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...corsHeaders(origin)
     }
-  }
-
-  if(page==="history") renderHistory();
-  if(page==="settings") renderSettings();
-  if(page==="help") renderHelp();
-  if(page==="home") setStatus("");
-}
-
-function newChat() {
-
-  history = [];
-  $("messages").innerHTML = "";
-  setStatus("");
-
-  selectedFile = null;
-  $("fileName").textContent = "";
-
-  showPage("chat");
-}
-
-function quick(text) {
-
-  if(activePage==="home") showPage("chat");
-
-  $("prompt").value = text;
-  $("prompt").focus();
-}
-
-function addMessage(role,text,image) {
-
-  const item = document.createElement("div");
-  item.className = "message " + role;
-
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-  avatar.textContent = role==="user" ? "N" : "K";
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.textContent = text;
-
-  if(image) {
-    const img = document.createElement("img");
-    img.src = image;
-    img.alt = "Generated image";
-    bubble.appendChild(img);
-  }
-
-  item.append(avatar,bubble);
-
-  $("messages").appendChild(item);
-  $("content").scrollTop = $("content").scrollHeight;
-}
-
-async function post(path,data) {
-
-  const controller = new AbortController();
-
-  const timer = setTimeout(
-    () => controller.abort(),
-    90000
-  );
-
-  try {
-
-    const response = await fetch(API+path,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify(data),
-      signal:controller.signal
-    });
-
-    const result = await response.json().catch(() => ({
-      error:"The server returned an unreadable response."
-    }));
-
-    if(!response.ok) {
-      throw new Error(
-        result.error || "Request failed ("+response.status+")"
-      );
-    }
-
-    return result;
-
-  } catch(e) {
-
-    if(e.name==="AbortError") {
-      throw new Error("The request took too long. Please try again.");
-    }
-
-    throw e;
-
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function sendMessage() {
-
-  const message = $("prompt").value.trim();
-
-  if(!message && !selectedFile) return;
-
-  $("prompt").value = "";
-  $("send").disabled = true;
-
-  setStatus("KBAI is working...");
-
-  try {
-
-    if(mode==="image") {
-
-      if(!message) {
-        throw new Error("Describe the image you want.");
-      }
-
-      addMessage("user",message);
-
-      const result = await post("/image",{
-        prompt:message
-      });
-
-      addMessage(
-        "assistant",
-        result.reply || "Your image is ready.",
-        result.image
-      );
-
-    } else if(mode==="file") {
-
-      if(!selectedFile) {
-        throw new Error("Please attach a document first.");
-      }
-
-      const data = await fileBase64(selectedFile);
-
-      addMessage(
-        "user",
-        message || "Please summarise this document."
-      );
-
-      const result = await post("/document",{
-        question:message || "Summarise this document.",
-        fileName:selectedFile.name,
-        mimeType:selectedFile.type || "text/plain",
-        content:data
-      });
-
-      addMessage(
-        "assistant",
-        result.reply || "No answer received."
-      );
-
-    } else if(
-      selectedFile &&
-      selectedFile.type.startsWith("image/")
-    ) {
-
-      const data = await fileBase64(selectedFile);
-
-      addMessage(
-        "user",
-        message || "Please describe this image."
-      );
-
-      const result = await post("/vision",{
-        prompt:message || "Describe this image.",
-        image:data,
-        mimeType:selectedFile.type || "image/jpeg"
-      });
-
-      addMessage(
-        "assistant",
-        result.reply || "No answer received."
-      );
-
-    } else {
-
-      if(!message) {
-        throw new Error("Type a message first.");
-      }
-
-      const question =
-        (mode==="study"
-          ? "Help me learn. Explain simply: "
-          : mode==="writing"
-          ? "Help me with this writing task: "
-          : "") + message;
-
-      addMessage("user",message);
-
-      history.push({
-        role:"user",
-        content:question
-      });
-
-      const result = await post("/chat",{
-        messages:history
-      });
-
-      const reply =
-        result.reply || "I couldn't generate a response.";
-
-      history.push({
-        role:"assistant",
-        content:reply
-      });
-
-      addMessage("assistant",reply);
-    }
-
-    saveCurrentChat();
-
-    selectedFile = null;
-    $("fileName").textContent = "";
-
-    setStatus("");
-
-  } catch(error) {
-
-    addMessage(
-      "assistant",
-      "Sorry, something went wrong: " + error.message
-    );
-
-    setStatus("Please check your connection and try again.");
-
-  } finally {
-
-    $("send").disabled = false;
-
-  }
-}
-
-function fileBase64(file) {
-
-  return new Promise((resolve,reject) => {
-
-    const reader = new FileReader();
-
-    reader.onload = () =>
-      resolve(String(reader.result).split(",")[1]);
-
-    reader.onerror = () =>
-      reject(new Error("Could not read that file."));
-
-    reader.readAsDataURL(file);
-
   });
 }
 
-$("upload").addEventListener("change",e => {
-
-  const file = e.target.files[0];
-
-  if(!file) return;
-
-  if(file.size > 8*1024*1024) {
-
-    setStatus("Please choose a file smaller than 8 MB.");
-    e.target.value = "";
-    return;
-  }
-
-  if(
-    mode==="file" &&
-    !file.name.toLowerCase().endsWith(".txt")
-  ) {
-
-    setStatus(
-      "The connected document endpoint currently supports TXT files only."
-    );
-
-    e.target.value = "";
-    return;
-  }
-
-  selectedFile = file;
-
-  $("fileName").textContent = "📎 " + file.name;
-
-  setStatus("File attached and ready.");
-
-});
-
-function saveCurrentChat() {
-
-  try {
-
-    const chats = JSON.parse(
-      localStorage.getItem("kbai_chats") || "[]"
-    );
-
-    if(!history.length) return;
-
-    const title = String(
-      history.find(m => m.role==="user")?.content || "New chat"
-    ).slice(0,55);
-
-    chats.unshift({
-      title,
-      history:history.slice(),
-      date:new Date().toISOString()
-    });
-
-    localStorage.setItem(
-      "kbai_chats",
-      JSON.stringify(chats.slice(0,30))
-    );
-
-  } catch(e) {
-
-    console.warn("Chat history could not be saved",e);
-
-  }
-}
-
-function renderHistory() {
-
-  const chats = JSON.parse(
-    localStorage.getItem("kbai_chats") || "[]"
+function getText(result) {
+  return (
+    result?.response ||
+    result?.result?.response ||
+    result?.choices?.[0]?.message?.content ||
+    result?.result?.choices?.[0]?.message?.content ||
+    result?.description ||
+    ""
   );
+}
 
-  $("panel").innerHTML =
-    "<h2>Chat History</h2>" +
-    "<p>Your recent conversations saved on this device.</p>";
+function decodeBase64Image(value) {
+  const base64 = String(value).includes(",")
+    ? String(value).split(",").pop()
+    : String(value);
 
-  if(!chats.length) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
 
-    $("panel").insertAdjacentHTML(
-      "beforeend",
-      "<p>No saved chats yet. Start a conversation and it will appear here.</p>"
-    );
-
-    return;
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
   }
 
-  chats.forEach((chat,index) => {
-
-    const b = document.createElement("button");
-
-    b.textContent =
-      "◷  " + chat.title + "  ·  " +
-      new Date(chat.date).toLocaleDateString();
-
-    b.onclick = () => {
-
-      history = chat.history.slice();
-
-      $("messages").innerHTML = "";
-
-      history.forEach(m =>
-        addMessage(m.role,m.content)
-      );
-
-      showPage("chat");
-
-    };
-
-    $("panel").appendChild(b);
-
-  });
-
+  return bytes;
 }
 
-function renderSettings() {
+function toBase64(bytes) {
+  let binary = "";
+  const chunkSize = 0x8000;
 
-  $("panel").innerHTML =
-    "<h2>Settings</h2>" +
-    "<p>Personalise your KBAI experience.</p>" +
-    "<button onclick='toggleTheme()'>Toggle light / dark appearance</button>" +
-    "<button onclick='newChat()'>Start a new chat</button>" +
-    "<button onclick='clearHistory()'>Clear saved chat history</button>";
-
-}
-
-function renderHelp() {
-
-  $("panel").innerHTML =
-    "<h2>Help &amp; Info</h2>" +
-    "<p><b>KBAI — Smarter. Faster. Better.</b></p>" +
-    "<p>Use AI Chat for general questions, Study for learning support, Writing for writing tasks, Image Creator for image requests, and File Assistant to ask questions about supported documents.</p>" +
-    "<p>Some features depend on the services connected to your KBAI server.</p>";
-
-}
-
-function clearHistory() {
-
-  if(confirm("Clear all saved KBAI chats on this device?")) {
-
-    localStorage.removeItem("kbai_chats");
-    renderHistory();
-
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
   }
 
+  return btoa(binary);
 }
 
-function toggleTheme() {
-
-  document.body.classList.toggle("light-mode");
-
-  localStorage.setItem(
-    "kbai_light",
-    document.body.classList.contains("light-mode") ? "1" : "0"
-  );
-
-}
-
-function toggleFullscreen() {
-
-  if(!document.fullscreenElement) {
-    document.documentElement.requestFullscreen?.();
-  } else {
-    document.exitFullscreen?.();
+async function getImageBytes(result) {
+  if (result instanceof Uint8Array) return result;
+  if (result instanceof ArrayBuffer) return new Uint8Array(result);
+  if (result instanceof ReadableStream) {
+    return new Uint8Array(await new Response(result).arrayBuffer());
   }
-
+  if (result?.image instanceof Uint8Array) return result.image;
+  if (result?.image instanceof ArrayBuffer) return new Uint8Array(result.image);
+  if (result?.result instanceof Uint8Array) return result.result;
+  throw new Error("The image model returned an unsupported response format.");
 }
 
-$("prompt").addEventListener("keydown",e => {
+export default {
+  async fetch(request, env) {
+    const origin = request.headers.get("Origin") || "";
+    const url = new URL(request.url);
 
-  if(e.key==="Enter" && !e.shiftKey) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(origin)
+      });
+    }
 
-    e.preventDefault();
-    sendMessage();
+    if (request.method === "GET" && url.pathname === "/") {
+      return json({
+        name: "Kabenevi AI",
+        status: "online",
+        features: ["chat", "document", "vision", "image-generation"]
+      }, 200, origin);
+    }
 
+    if (request.method !== "POST") {
+      return json({ error: "Method not allowed." }, 405, origin);
+    }
+
+    if (!ALLOWED_ORIGINS.includes(origin)) {
+      return json({ error: "Origin not allowed." }, 403, origin);
+    }
+
+    if (!env || !env.AI || typeof env.AI.run !== "function") {
+      return json({
+        error: "Cloudflare Workers AI binding is missing. Add an AI binding named AI."
+      }, 500, origin);
+    }
+
+    try {
+      const body = await request.json();
+
+      if (url.pathname === "/chat") {
+        if (!Array.isArray(body.messages) || body.messages.length === 0) {
+          return json({ error: "Please provide at least one message." }, 400, origin);
+        }
+
+        const messages = body.messages
+          .filter(message =>
+            message &&
+            ["system", "user", "assistant"].includes(message.role) &&
+            typeof message.content === "string" &&
+            message.content.trim()
+          )
+          .slice(-30);
+
+        if (!messages.length) {
+          return json({ error: "No valid chat messages were provided." }, 400, origin);
+        }
+
+        if (!messages.some(message => message.role === "user")) {
+          return json({ error: "Please include a user message." }, 400, origin);
+        }
+
+        const result = await env.AI.run(CHAT_MODEL, {
+          messages: [
+            {
+              role: "system",
+              content: "You are Kabenevi AI (KBAI), a helpful, accurate, friendly assistant. Answer clearly and naturally. If a user asks for a short answer, be concise."
+            },
+            ...messages.filter(message => message.role !== "system")
+          ],
+          max_completion_tokens: 1200
+        });
+
+        const reply = getText(result);
+        if (typeof reply !== "string" || !reply.trim()) {
+          console.error("Empty or unexpected chat model response:", JSON.stringify(result));
+          return json({ error: "The AI model returned an empty response. Please try again." }, 502, origin);
+        }
+
+        return json({ reply: reply.trim() }, 200, origin);
+      }
+
+      if (url.pathname === "/document") {
+        if (typeof body.content !== "string" || !body.content.trim()) {
+          return json({ error: "Please attach a readable TXT document." }, 400, origin);
+        }
+
+        const result = await env.AI.run(CHAT_MODEL, {
+          messages: [
+            {
+              role: "system",
+              content: "You are KBAI. Read the supplied plain-text document carefully. Answer using the document and clearly say when the document does not contain the answer."
+            },
+            {
+              role: "user",
+              content: `Document:\n${body.content.slice(0, 40000)}\n\nQuestion: ${String(body.question || "Summarize this document.").slice(0, 2000)}`
+            }
+          ],
+          max_completion_tokens: 1200
+        });
+
+        const reply = getText(result);
+        if (!reply) return json({ error: "The document assistant returned an empty response." }, 502, origin);
+        return json({ reply }, 200, origin);
+      }
+
+      if (url.pathname === "/vision") {
+        if (typeof body.image !== "string" || !body.image) {
+          return json({ error: "Please attach an image." }, 400, origin);
+        }
+
+        const image = decodeBase64Image(body.image);
+        const result = await env.AI.run(VISION_MODEL, {
+          prompt: String(body.prompt || "Describe this image clearly."),
+          image: [...image]
+        });
+
+        const reply = getText(result);
+        if (!reply) return json({ error: "The image assistant returned an empty response." }, 502, origin);
+        return json({ reply }, 200, origin);
+      }
+
+      if (url.pathname === "/image") {
+        if (typeof body.prompt !== "string" || !body.prompt.trim()) {
+          return json({ error: "Please describe the image you want." }, 400, origin);
+        }
+
+        const result = await env.AI.run(IMAGE_MODEL, {
+          prompt: body.prompt.slice(0, 1500),
+          num_steps: 4
+        });
+
+        const bytes = await getImageBytes(result);
+        if (!bytes.length) return json({ error: "The image model returned an empty image." }, 502, origin);
+
+        return json({
+          image: toBase64(bytes),
+          mimeType: "image/png"
+        }, 200, origin);
+      }
+
+      return json({ error: "Endpoint not found." }, 404, origin);
+    } catch (error) {
+      console.error("KBAI Worker error:", error);
+      return json({
+        error: "KBAI could not complete that request.",
+        details: error && error.message ? error.message : "Unknown Cloudflare AI error."
+      }, 500, origin);
+    }
   }
-
-});
-
-$("prompt").addEventListener("input",e => {
-
-  e.target.style.height = "auto";
-
-  e.target.style.height =
-    Math.min(e.target.scrollHeight,145) + "px";
-
-});
-
-if(localStorage.getItem("kbai_light")==="1") {
-  document.body.classList.add("light-mode");
-}
-
-</script>
-</body>
-</html>
+};
